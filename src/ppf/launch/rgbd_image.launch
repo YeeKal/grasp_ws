@@ -1,0 +1,7 @@
+<launch>
+	<include file="$(find openni2_launch)/launch/openni2.launch"/>
+	<!--<node pkg="tf" type="static_transform_publisher" name="rgbd_pub" args="0.019154  0.115535  -0.032927  0.687290  0.263928  0.641186  -0.216463  /ee_link /camera_link 1000"/>-->
+	<!--<node pkg="tf" type="static_transform_publisher" name="rgbd_pub" args="0.016862  0.117522  -0.019401  0.660651  0.232704  0.661761  -0.267322  /ee_link /camera_rgb_optical_frame 1000"/>-->
+	<!--<node pkg="tf" type="static_transform_publisher" name="rgbd_pub" args="0.017445  0.120830  -0.016076  0.661073  0.234948  0.660680  -0.266990  /ee_link /camera_rgb_optical_frame 1000"/-->
+	<node pkg="ppf" type="get_image_node" name="get_image_node"/>
+</launch>
