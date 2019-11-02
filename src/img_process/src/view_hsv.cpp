@@ -1,87 +1,44 @@
 
-#include <opencv2/core/core.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
-using namespace cv;
 #include<iostream>
 #include <fstream>
 #include<string>
 #include <algorithm>
+
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
+
+using namespace cv;
 using namespace std;
-//输入图像
-Mat img;
-//灰度值归一化
-Mat bgr;
-//HSV图像
-Mat hsv;
-//色相
-int hmin = 85;
-int hmin_Max = 180;
-int hmax = 125;
-int hmax_Max = 180;
-//饱和度
-int smin = 20;
-int smin_Max = 255;
-int smax = 255;
-int smax_Max = 255;
-//亮度
-int vmin = 20;
-int vmin_Max = 255;
-int vmax = 255;
-int vmax_Max = 235;
-//显示原图的窗口
-string windowName = "src";
-//输出图像的显示窗口
-string dstName = "dst";
-//输出图像
-Mat dst;
-//回调函数
 
-
-
-void printHelp(){
-	std::cout<<"view  HSV of the pictures in some. "<<std::endl;
-}
-int main(int argc, char** argv)
-{
-	string folder_name="imgs";
-	string file_type="jpg";
-
-	if(argc>1){
-		folder_name=argv[1];
+class HSVSegmentation{
+public:
+	cv::Mat src_,bgr_,hsv_;
+	cv::Mat mask_,final_mask_;
+	int hmin_,hmax_,smin_,smax_,vmin_,vmax_;
+	HSVSegmentation(int hmin,int hmax,int smin,int smax,int vmin,int vmax)
+	:hmin_(hmin),hmax_(hmax),smin_(smin),smax_(smax),vmin_(vmin),vmax_(vmax)
+	{}
+	~HSVSegmentation(){}
+	//Mat对象做为函数参数，不论是传引用，传指针，对于传值调用，在函数内对其进行的操作会作用到原对象
+	void setSrc(cv::Mat src){
+		src_=src;//not need deep copy
+		mask_ = Mat::zeros(src_.rows, src_.cols, CV_8UC1);
+		final_mask_ = Mat::zeros(src_.rows, src_.cols, CV_8UC1);
+		segProcess();
 	}
-	if(argc>2){
-		file_type=argv[2];
-	}
-
-	string file_template=folder_name+"/*."+file_type;
-	vector<cv::String> image_files;
-	cv::glob(file_template,image_files);
-
-	Mat mask,bgr,hsv,dst;
-	int image_num=0;
-
-	vector<int> hv(181),sv(256,0),vv(256,0);
-	for(int i=0;i<image_files.size();i++){
-		std::cout<<"view image:"<<image_num<<std::endl;
-		Mat src=imread(image_files[i]);
-		bgr=src.clone();
-		GaussianBlur(src, bgr, cv::Size(5, 5), 3, 3);
-		// Mat element=getStructuringElement(MORPH_RECT, Size(15,15));
-		// morphologyEx(bgr, bgr, MORPH_OPEN, element);
-
-		cvtColor(bgr, hsv, CV_BGR2HSV);
-
-		dst = Mat::zeros(src.size(), src.type());
-		inRange(hsv, Scalar(hmin, smin, vmin), Scalar(hmax, smax, vmax), mask);
+	void segProcess(){
+		cv::GaussianBlur(src_, bgr_, cv::Size(5, 5), 3, 3);
+		cv::cvtColor(bgr_, hsv_, CV_BGR2HSV);
+		cv::inRange(hsv_, Scalar(hmin_, smin_, vmin_), Scalar(hmax_, smax_, vmax_), mask_);
 
 		//open close
-		Mat element=getStructuringElement(MORPH_RECT, Size(15,15));
-		morphologyEx(mask, mask, MORPH_OPEN, element);
+		cv::Mat element=getStructuringElement(MORPH_RECT, Size(15,15));
+		cv::morphologyEx(mask_, mask_, MORPH_OPEN, element);
 
 		//contour
 		vector<vector<cv::Point>> contours;
-		cv::findContours(mask,contours,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_NONE); 
+		cv::findContours(mask_,contours,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_NONE); 
 		// 寻找最大连通域  
 		double maxArea = 0;  
 		int max_contour=0;
@@ -95,27 +52,82 @@ int main(int argc, char** argv)
 				max_contour=i; 
 			}  
 		}  
+
 		maxContour=contours[max_contour];
+		drawContours(final_mask_, contours, max_contour, Scalar(255), CV_FILLED);
+	}
 
-		// final mask
-		Mat final_mask = Mat::zeros(src.rows, src.cols, CV_8UC1);
-		// for(int i=0;i<maxContour.size();i++){
-		// 	final_mask.at<uchar>(maxContour[i].y, maxContour[i].x)=255;
-		// 	circle(src, maxContour[i], 2, Scalar(0,0,255),FILLED);
+	void getMask(Mat &mask){
+		mask=final_mask_.clone();
+	}
 
-		// }
-		drawContours(final_mask, contours, max_contour, Scalar(255), CV_FILLED);
-
-		for (int r = 0; r < bgr.rows; r++)
+	void getColorDst(Mat &img){
+		Mat dst;
+		dst = Mat::zeros(src_.size(), src_.type());
+		for (int r = 0; r < src_.rows; r++)
 		{
-			for (int c = 0; c < bgr.cols; c++)
+			for (int c = 0; c < src_.cols; c++)
 			{
-				if (final_mask.at<uchar>(r, c) == 255)
+				if (final_mask_.at<uchar>(r, c) == 255)
 				{
-					dst.at<Vec3b>(r, c) = src.at<Vec3b>(r, c);
+					dst.at<Vec3b>(r, c) = src_.at<Vec3b>(r, c);
 				}
 			}
 		}
+		img= dst.clone();
+	}
+
+	// filter the depth img by the mask
+	void getDepthDst(Mat &img){
+		Mat dst;
+		dst = Mat::zeros(img.size(),img.type());
+		for (int r = 0; r < img.rows; r++)
+		{
+			for (int c = 0; c < img.cols; c++)
+			{
+				if (final_mask_.at<uchar>(r, c) == 255)
+				{
+					dst.at<float>(r, c) = img.at<float>(r, c);
+				}
+			}
+		}
+		img= dst.clone();
+	}
+
+};
+
+
+
+void printHelp(){
+	std::cout<<"view  HSV of the pictures in some. "<<std::endl;
+}
+int main(int argc, char** argv)
+{
+	string folder_name="imgs";
+	string file_type="jpg";
+	if(argc>1){
+		folder_name=argv[1];
+	}
+	if(argc>2){
+		file_type=argv[2];
+	}
+
+	string file_template=folder_name+"/*."+file_type;
+	vector<cv::String> image_files;
+	cv::glob(file_template,image_files);
+
+	Mat final_mask,dst;
+	int image_num=0;
+
+	HSVSegmentation hsv(85,125,20,255,20,255);
+	for(int i=0;i<image_files.size();i++){
+		image_num++;
+		std::cout<<"view image:"<<image_num<<std::endl;
+		Mat src=imread(image_files[i]);
+		hsv.setSrc(src);
+		hsv.getMask(final_mask);
+		hsv.getColorDst(dst);
+		
 		imshow("mask",final_mask);
 		imshow("seg", dst);
 		waitKey(0);

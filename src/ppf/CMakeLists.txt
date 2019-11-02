@@ -34,7 +34,7 @@ catkin_package(
 	INCLUDE_DIRS  #which is neede to indicate the include path
 		include
 		${catkin_INCLUDE_DIRS}
-		"/home/yee/ros_ws/temp_ws/devel/include"
+		"/home/yee/ros_ws/grasp_ws/devel/include"
 )
 
 ###########
@@ -45,7 +45,7 @@ catkin_package(
 ## Your package locations should be listed before other locations
 # include_directories(include)
 include_directories(
-	"/home/yee/ros_ws/temp_ws/devel/include"
+	"/home/yee/ros_ws/grasp_ws/devel/include"
   ${catkin_INCLUDE_DIRS}
 )
 include_directories(${OpenCV_INCLUDE_DIRS})
