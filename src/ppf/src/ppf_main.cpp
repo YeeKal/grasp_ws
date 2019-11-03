@@ -43,6 +43,92 @@ pcl::PointCloud<pcl::PointXYZRGBA>::Ptr scene_rgb (new pcl::PointCloud<pcl::Poin
 pcl::PointCloud<pcl::PointNormal>::Ptr scene_with_normals (new pcl::PointCloud<pcl::PointNormal> ());
 vector<Pose6DPtr> results;
 
+class HSVSegmentation{
+public:
+	cv::Mat src_,bgr_,hsv_;
+	cv::Mat mask_,final_mask_;
+	int hmin_,hmax_,smin_,smax_,vmin_,vmax_;
+	HSVSegmentation(int hmin,int hmax,int smin,int smax,int vmin,int vmax)
+	:hmin_(hmin),hmax_(hmax),smin_(smin),smax_(smax),vmin_(vmin),vmax_(vmax)
+	{}
+	~HSVSegmentation(){}
+	//Mat对象做为函数参数，不论是传引用，传指针，对于传值调用，在函数内对其进行的操作会作用到原对象
+	void setSrc(cv::Mat src){
+		src_=src;//not need deep copy
+		mask_ = Mat::zeros(src_.rows, src_.cols, CV_8UC1);
+		final_mask_ = Mat::zeros(src_.rows, src_.cols, CV_8UC1);
+		segProcess();
+	}
+	void segProcess(){
+		cv::GaussianBlur(src_, bgr_, cv::Size(5, 5), 3, 3);
+		cv::cvtColor(bgr_, hsv_, CV_BGR2HSV);
+		cv::inRange(hsv_, Scalar(hmin_, smin_, vmin_), Scalar(hmax_, smax_, vmax_), mask_);
+
+		//open close
+		cv::Mat element=getStructuringElement(MORPH_RECT, Size(15,15));
+		cv::morphologyEx(mask_, mask_, MORPH_OPEN, element);
+
+		//contour
+		vector<vector<cv::Point> > contours;
+		cv::findContours(mask_,contours,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_NONE); 
+		// 寻找最大连通域  
+		double maxArea = 0;  
+		int max_contour=0;
+		vector<cv::Point> maxContour;  
+		for(size_t i = 0; i < contours.size(); i++)  
+		{  
+			double area = cv::contourArea(contours[i]);  
+			if (area > maxArea)  
+			{  
+				maxArea = area;  
+				max_contour=i; 
+			}  
+		}  
+
+		maxContour=contours[max_contour];
+		drawContours(final_mask_, contours, max_contour, Scalar(255), CV_FILLED);
+	}
+
+	void getMask(Mat &mask){
+		mask=final_mask_.clone();
+	}
+
+	void getColorDst(Mat &img){
+		Mat dst;
+		dst = Mat::zeros(src_.size(), src_.type());
+		for (int r = 0; r < src_.rows; r++)
+		{
+			for (int c = 0; c < src_.cols; c++)
+			{
+				if (final_mask_.at<uchar>(r, c) == 255)
+				{
+					dst.at<Vec3b>(r, c) = src_.at<Vec3b>(r, c);
+				}
+			}
+		}
+		img= dst.clone();
+	}
+
+	// filter the depth img by the mask
+	void getDepthDst(Mat &img){
+		Mat dst;
+		dst = Mat::zeros(img.size(),img.type());
+		for (int r = 0; r < img.rows; r++)
+		{
+			for (int c = 0; c < img.cols; c++)
+			{
+				if (final_mask_.at<uchar>(r, c) == 255)
+				{
+					dst.at<float>(r, c) = img.at<float>(r, c);
+				}
+			}
+		}
+		img= dst.clone();
+	}
+
+};
+
+
 bool obj_s(obj_srv::obj_6d::Request &req,obj_srv::obj_6d::Response &res)
 {
     if(req.start)
@@ -170,6 +256,8 @@ int main(int argc, char** argv)
     sensor_msgs::Image msg_rgb;
     sensor_msgs::Image msg_depth;
 
+    HSVSegmentation hsv(85,125,20,255,20,255);
+
 
     string modelFileName = (string)argv[1];
     string path = ros::package::getPath("ppf");
@@ -211,8 +299,14 @@ int main(int argc, char** argv)
         {
             msg_rgb = srv.response.rgb_image;
             msg_depth = srv.response.depth_image;
-            rgb = cv_bridge::toCvCopy(msg_rgb, sensor_msgs::image_encodings::TYPE_8UC3)->image;
+            rgb = cv_bridge::toCvCopy(msg_rgb, sensor_msgs::image_encodings::BGR8)->image;
             depth = cv_bridge::toCvCopy(msg_depth, sensor_msgs::image_encodings::TYPE_32FC1)->image;
+            hsv.setSrc(rgb);
+            //hsv.getMask(final_mask);
+            hsv.getDepthDst(depth);
+            // imshow("rgb",rgb);
+            // imshow("depth",depth);
+            waitKey(0);
 
         }
         catch (cv_bridge::Exception& e)
@@ -239,9 +333,12 @@ int main(int argc, char** argv)
                 p_rgb.x = scene_x;
                 p_rgb.y = scene_y;
                 p_rgb.z = scene_z;
-                p_rgb.r = rgb.ptr<uchar>(r)[c*3];
+                // p_rgb.r = rgb.ptr<uchar>(r)[c*3];
+                // p_rgb.g = rgb.ptr<uchar>(r)[c*3+1];
+                // p_rgb.b = rgb.ptr<uchar>(r)[c*3+2];
+                p_rgb.r = rgb.ptr<uchar>(r)[c*3+2];
                 p_rgb.g = rgb.ptr<uchar>(r)[c*3+1];
-                p_rgb.b = rgb.ptr<uchar>(r)[c*3+2];
+                p_rgb.b = rgb.ptr<uchar>(r)[c*3];
                 scene->points.push_back(p);
                 scene_rgb->points.push_back(p_rgb);
             }

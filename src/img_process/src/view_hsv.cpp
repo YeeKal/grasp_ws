@@ -37,7 +37,7 @@ public:
 		cv::morphologyEx(mask_, mask_, MORPH_OPEN, element);
 
 		//contour
-		vector<vector<cv::Point>> contours;
+		vector<vector<cv::Point> > contours;
 		cv::findContours(mask_,contours,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_NONE); 
 		// 寻找最大连通域  
 		double maxArea = 0;  

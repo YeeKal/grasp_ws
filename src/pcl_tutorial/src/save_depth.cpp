@@ -62,16 +62,23 @@ boost::shared_ptr<visualization::CloudViewer> createViewer()
   
     return(v);  
 }  
+void printHelp(){
+    std::cout << "Save depth image to point cloud(.pcd)."<<std::endl;
+    std::cout << "Usage:  <rgb_topic> <depth_topic> <saved folder>"<<std::endl;
+    std::cout << "Example:  rosrun pcl_tutorial saverk_depth_with_mask /camera/rgb/image_rect_color /camera/depth_registered/image_raw imgs" << std::endl;
+    std::cout << "Notice: Press space to record point cloud to a pcd file." << std::endl;
 
+}
 
 int main(int argc, char ** argv){
-        ros::init(argc, argv, "pcl_write");  
+        ros::init(argc, argv, "save_depth");  
         ros::NodeHandle nh;  
-        cout<< "Press space to record point cloud to a file."<<endl;  
+        cout<< "Press space to record point cloud to a pcd file."<<endl;  
+        string topic_name="/camera/depth_registered/points";
     
         viewer = createViewer();  
-    
-        ros::Subscriber pcl_sub = nh.subscribe("/camera/depth_registered/points", 1, cloudCB);  
+
+        ros::Subscriber pcl_sub = nh.subscribe(topic_name, 1, cloudCB);  
     
         ros::Rate rate(30.0);  
     

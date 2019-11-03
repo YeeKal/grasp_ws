@@ -60,9 +60,6 @@ target_link_libraries(correspondence_block ${catkin_LIBRARIES})
 add_executable(read_obj src/read_obj.cpp)
 target_link_libraries(read_obj ${catkin_LIBRARIES})
 
-add_executable(depth_to_pcd src/depth_to_pcd.cpp)
-target_link_libraries(depth_to_pcd ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
-
 add_executable(region_growing_rgb_segmentation src/region_growing_rgb_segmentation.cpp)
 target_link_libraries(region_growing_rgb_segmentation ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
@@ -97,9 +94,14 @@ target_link_libraries(extract_plane ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 #target_link_libraries(linemod_detect ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 
+add_executable(save_depth src/save_depth.cpp)
+target_link_libraries(save_depth ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
-add_executable(image_saver_keyboard src/image_saver_keyboard.cpp)
-target_link_libraries(image_saver_keyboard ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+add_executable(save_rgb src/save_rgb.cpp)
+target_link_libraries(save_rgb ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
+add_executable(save_depth_with_mask src/save_depth_with_mask.cpp)
+target_link_libraries(save_depth_with_mask ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 
 
