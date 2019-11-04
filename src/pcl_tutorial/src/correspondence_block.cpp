@@ -235,17 +235,17 @@ int main (int argc, char *argv[])
 
     // processing
     
-    pcl::PassThrough<PointType> pass;
-    pass.setInputCloud (scene_pass);
-    // pass.setFilterFieldName ("b");
-    // pass.setFilterLimits (10, 255);
-    pass.setFilterFieldName ("z");
-    pass.setFilterLimits (0.2, 1.5);
-    pass.filter (*scene_ground);
-    pass.setFilterFieldName ("x");
-    pass.setInputCloud (scene_ground);
-    pass.setFilterLimits (-0.2, 0.4);
-    pass.filter (*scene_ground);
+    // pcl::PassThrough<PointType> pass;
+    // pass.setInputCloud (scene_pass);
+    // // pass.setFilterFieldName ("b");
+    // // pass.setFilterLimits (10, 255);
+    // pass.setFilterFieldName ("z");
+    // pass.setFilterLimits (0.2, 1.5);
+    // pass.filter (*scene_ground);
+    // pass.setFilterFieldName ("x");
+    // pass.setInputCloud (scene_ground);
+    // pass.setFilterLimits (-0.2, 0.4);
+    // pass.filter (*scene_ground);
 
     // pass.setInputCloud (model_pass);
     // pass.setFilterFieldName ("y");
@@ -261,35 +261,35 @@ int main (int argc, char *argv[])
     std::cout<<"model size after filter:"<<model->points.size()<<endl;
 
 
-    sor.setInputCloud (scene_ground);
+    sor.setInputCloud (scene_pass);
     sor.setLeafSize (0.01f, 0.01f, 0.01f);
-    sor.filter (*scene_filter);
+    sor.filter (*scene);
 
-    pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients ());
-    pcl::PointIndices::Ptr inliers (new pcl::PointIndices ());
-    // Create the segmentation object
-    pcl::SACSegmentation<PointType> seg;
-    // Optional
-    seg.setOptimizeCoefficients (true);
-    // Mandatory
-    seg.setModelType (pcl::SACMODEL_PLANE);
-    seg.setMethodType (pcl::SAC_RANSAC);
-    seg.setMaxIterations (1000);
-    seg.setDistanceThreshold (0.01);
-    pcl::ExtractIndices<PointType> extract;
-    seg.setInputCloud (scene_filter);
-    seg.segment (*inliers, *coefficients);
-    if (inliers->indices.size () == 0)
-    {
-        std::cerr << "Could not estimate a planar model for the given dataset." << std::endl;
-        return 0;
-    }
+    // pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients ());
+    // pcl::PointIndices::Ptr inliers (new pcl::PointIndices ());
+    // // Create the segmentation object
+    // pcl::SACSegmentation<PointType> seg;
+    // // Optional
+    // seg.setOptimizeCoefficients (true);
+    // // Mandatory
+    // seg.setModelType (pcl::SACMODEL_PLANE);
+    // seg.setMethodType (pcl::SAC_RANSAC);
+    // seg.setMaxIterations (1000);
+    // seg.setDistanceThreshold (0.01);
+    // pcl::ExtractIndices<PointType> extract;
+    // seg.setInputCloud (scene_filter);
+    // seg.segment (*inliers, *coefficients);
+    // if (inliers->indices.size () == 0)
+    // {
+    //     std::cerr << "Could not estimate a planar model for the given dataset." << std::endl;
+    //     return 0;
+    // }
 
-    // Extract the inliers
-    extract.setInputCloud (scene_filter);
-    extract.setIndices (inliers);
-    extract.setNegative (true);
-    extract.filter (*scene);
+    // // Extract the inliers
+    // extract.setInputCloud (scene_filter);
+    // extract.setIndices (inliers);
+    // extract.setNegative (true);
+    // //extract.filter (*scene);
 
     //
     //  Compute Normals
@@ -499,7 +499,7 @@ int main (int argc, char *argv[])
                 viewer.addLine<PointType, PointType> (model_point, scene_point, 0, 255, 0, ss_line.str ());
             }
         }
-        //break;
+        //break;//keep the latest one
     }
 
     while (!viewer.wasStopped ())

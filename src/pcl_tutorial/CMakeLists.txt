@@ -29,6 +29,9 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
+# tutorial
+add_executable(tutorial_icp src/tutorial_icp.cpp)
+target_link_libraries(tutorial_icp ${catkin_LIBRARIES})
 
 add_executable(pcl_temp src/pcl_temp.cpp)
 target_link_libraries(pcl_temp ${catkin_LIBRARIES})
@@ -36,8 +39,7 @@ target_link_libraries(pcl_temp ${catkin_LIBRARIES})
 add_executable(pcl_vis src/pcl_vis.cpp)
 target_link_libraries(pcl_vis ${catkin_LIBRARIES})
 
-add_executable(pcl_icp src/pcl_icp.cpp)
-target_link_libraries(pcl_icp ${catkin_LIBRARIES})
+
 
 add_executable(ply_to_pcd src/ply_to_pcd.cpp)
 target_link_libraries(ply_to_pcd ${catkin_LIBRARIES})
@@ -74,6 +76,10 @@ target_link_libraries(pcd_size ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 add_executable(alignment_prerejective src/alignment_prerejective.cpp)
 target_link_libraries(alignment_prerejective ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
+add_executable(icp_block src/icp_block.cpp)
+target_link_libraries(icp_block ${catkin_LIBRARIES})
+
+
 #add_executable(global_hypothesis src/global_hypothesis.cpp)
 #target_link_libraries(global_hypothesis ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
@@ -102,6 +108,8 @@ target_link_libraries(save_rgb ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 add_executable(save_depth_with_mask src/save_depth_with_mask.cpp)
 target_link_libraries(save_depth_with_mask ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
+add_subdirectory(src/super_4pcs)
 
 
 
