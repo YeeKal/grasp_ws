@@ -203,6 +203,7 @@ int main (int argc,
 		if (icp.hasConverged ())
 		{
 			printf ("\033[11A");  // Go up 11 lines in terminal output.
+		std::cout<<"euclaian spsilon:"<<icp.getEuclideanFitnessEpsilon ()<<std::endl;
 			printf ("\nICP has converged, score is %+.0e\n", icp.getFitnessScore ());
 			std::cout << "\nICP transformation " << ++iterations << " : cloud_icp -> cloud_in" << std::endl;
 			transformation_matrix *= icp.getFinalTransformation ().cast<double>();  // WARNING /!\ This is not accurate! For "educational" purpose only!

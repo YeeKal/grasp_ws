@@ -32,3 +32,7 @@ target_link_libraries(super4pcs_demo  ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${
 add_executable(pcl_super4pcs_demo pcl_super4pcs_demo.cpp)
 target_link_libraries(pcl_super4pcs_demo ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${Super4PCS_LIBRARIES})
 
+add_executable(supicp_demo supicp_demo.cpp)
+target_link_libraries(supicp_demo ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${Super4PCS_LIBRARIES})
+
+

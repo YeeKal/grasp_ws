@@ -92,6 +92,7 @@ static double max_color = -1;
 // Number of sampled points in both files. The 4PCS allows a very aggressive
 // sampling.
 static int n_points = 200;
+static int n_ite=20;
 
 // Maximum angle (degrees) between corresponded normals.
 static double norm_diff = -1;
@@ -109,6 +110,7 @@ static inline void printParameterList(){
     fprintf(stderr, "\t[ -a norm_diff (%f) ]\n", norm_diff);
     fprintf(stderr, "\t[ -c max_color_diff (%f) ]\n", max_color);
     fprintf(stderr, "\t[ -t max_time_seconds (%d) ]\n", max_time_seconds);
+    fprintf(stderr, "\t[ -it n_ute (%d) ]\n", n_ite);
 }
 
 static inline void printUsage(int /*argc*/, char **argv){
@@ -126,6 +128,10 @@ static inline int getArgs(int argc,
       input2 = std::string(argv[++i]);
     } else if (!strcmp(argv[i], "-o")) {
       overlap = atof(argv[++i]);
+      //add by ee
+    } else if (!strcmp(argv[i], "-it")) {
+      n_ite = atoi(argv[++i]);
+
     } else if (!strcmp(argv[i], "-d")) {
       delta = atof(argv[++i]);
     } else if (!strcmp(argv[i], "-c")) {
