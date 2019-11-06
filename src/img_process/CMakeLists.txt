@@ -5,6 +5,15 @@ project(img_process)
 add_compile_options(-std=c++11)
 set(CMAKE_BUILD_TYPE Release)
 
+set(OpenNI2_LIBRARY 
+    /usr/lib/libOpenNI2.so
+    /usr/lib/OpenNI2/Drivers/libDummyDevice.so
+    /usr/lib/OpenNI2/Drivers/libOniFile.so
+    /usr/lib/OpenNI2/Drivers/libPS1080.so
+    /usr/lib/OpenNI2/Drivers/libPSLink.so
+    )
+
+
 find_package( OpenCV  REQUIRED)
 find_package(catkin REQUIRED COMPONENTS
   
@@ -38,4 +47,9 @@ target_link_libraries(average_hsv ${catkin_LIBRARIES} ${OpenCV_LIBS})
 
 add_executable(view_hsv src/view_hsv.cpp)
 target_link_libraries(view_hsv ${catkin_LIBRARIES} ${OpenCV_LIBS})
+
+
+add_executable(openni2_demo src/openni2_demo.cpp)
+target_link_libraries(openni2_demo ${catkin_LIBRARIES} ${OpenCV_LIBS} ${OpenNI2_LIBRARY})
+
 
