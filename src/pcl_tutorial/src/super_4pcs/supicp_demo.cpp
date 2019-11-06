@@ -30,7 +30,7 @@ void loadPointCloud(string argv,PointCloudT::Ptr cloud){
 		std::cout<<"Unknown file type."<<std::endl;
 	}
 }
-// rosrun pcl_tutorial icp_block block/edit_block/del2.pcd imgs/pc1.pcd 50
+// rosrun pcl_tutorial supicp_demo block/edit_block/del2_t.pcd imgs/pc10.pcd  -o 0.7 -d 0.01 -t 1000 -n 200 -it 20
 
 int main (int argc,
 	char* argv[])

@@ -16,6 +16,7 @@
 #include <pcl/registration/transformation_estimation_svd.h>
 #include <super4pcs/shared4pcs.h>
 #include <super4pcs/algorithms/super4pcs.h>
+#include <pcl/console/time.h>
 
 #include "demo-utils.h"
 
@@ -80,6 +81,12 @@ class Super4pcsICP
 	{
 		initMatcher(argc, argv);
 	}
+	Super4pcsICP()
+	: src_pcl_(new PointCloudSource),
+	  tar_pcl_(new PointCloudTarget),
+	  final_pcl_(new PointCloudTarget),
+	  temp_pcl_(new PointCloudTarget)
+	{}
 
 	virtual ~Super4pcsICP (){}
 
