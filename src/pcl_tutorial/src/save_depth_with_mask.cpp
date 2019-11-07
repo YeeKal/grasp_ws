@@ -139,7 +139,7 @@ public:
     :topic_name_(rgb_topic),
      depth_topic_name_(depth_topic),
      saved_folder_(saved_folder),
-     hsv_(HSVSegmentation(85,125,20,255,20,255)),
+     hsv_(HSVSegmentation(100,123, 150,255,85,220)),
      it_(nh_),save_img_(false),filenum_(0)
     {
         // Subscrive to input video feed and publish output video feed
