@@ -144,7 +144,8 @@ int main(int argc, char** argv)
     sensor_msgs::Image msg_rgb;
     sensor_msgs::Image msg_depth;
 
-    HSVSegmentation hsv(85,125,20,255,20,255);
+    //HSVSegmentation hsv(85,125,20,255,20,255);
+    HSVSegmentation hsv(100,123, 150,255,85,220);
     sup_icp.initMatcher(argc,argv);
 
 	
