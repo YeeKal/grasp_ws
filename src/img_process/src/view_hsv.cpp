@@ -119,7 +119,9 @@ int main(int argc, char** argv)
 	Mat final_mask,dst;
 	int image_num=0;
 
-	HSVSegmentation hsv(85,125,20,255,20,255);
+	//HSVSegmentation hsv(85,125,20,255,20,255);	//big box
+	HSVSegmentation hsv(100,123, 150,255,85,220);	// small box
+
 	for(int i=0;i<image_files.size();i++){
 		image_num++;
 		std::cout<<"view image:"<<image_num<<std::endl;
