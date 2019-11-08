@@ -13,19 +13,19 @@ Mat bgr;
 //HSV图像
 Mat hsv;
 //色相
-int hmin = 0;
+int hmin = 100;
 int hmin_Max = 180;
-int hmax = 180;
+int hmax = 130;
 int hmax_Max = 180;
 //饱和度
-int smin = 0;
+int smin = 130;
 int smin_Max = 255;
 int smax = 255;
 int smax_Max = 255;
 //亮度
-int vmin = 106;
+int vmin = 80;
 int vmin_Max = 255;
-int vmax = 255;
+int vmax = 220;
 int vmax_Max = 255;
 //显示原图的窗口
 string windowName = "src";

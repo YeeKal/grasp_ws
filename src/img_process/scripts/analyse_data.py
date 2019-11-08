@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 try:
-    file=open("../../../small_imgs/color_single_box/hsv.csv")
+    file=open("../../../imgs/box_small/hsv.csv")
 except FileNotFoundError:
     print('文件不存在')
 else:

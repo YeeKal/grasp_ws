@@ -1,5 +1,8 @@
 #include <iostream>
 #include <string>
+#include <ros/ros.h>
+#include <ros/package.h>
+
 
 #include <pcl/io/ply_io.h>
 #include <pcl/io/pcd_io.h>
@@ -8,6 +11,9 @@
 #include <pcl/registration/icp.h>
 #include <pcl/visualization/pcl_visualizer.h>
 #include <pcl/console/time.h>   // TicToc
+
+#include <opencv2/core/core.hpp>
+#include <yaml-cpp/yaml.h>
 
 #include "super4pcs_icp.h"
 
@@ -31,6 +37,8 @@ void loadPointCloud(string argv,PointCloudT::Ptr cloud){
 	}
 }
 // rosrun pcl_tutorial supicp_demo block/edit_block/del2_t.pcd imgs/pc10.pcd  -o 0.7 -d 0.01 -t 1000 -n 200 -it 20
+// box_small: rosrun pcl_tutorial supicp_demo reso/box_small/thin.pcd  imgs/box_small/depth_with_mask/pc6.pcd  -o 0.7 -d 0.01 -t 1000 -n 100 -it 10
+
 
 int main (int argc,
 	char* argv[])
@@ -51,6 +59,16 @@ int main (int argc,
 		return (-1);
 	}
 
+	// load config
+	std::string package_path = ros::package::getPath("pcl_tutorial");
+    std::string config_file=package_path+"/config/supicp.yaml";//"home/yee/ros_ws/grasp_ws/src/pcl_tutorial/config/supicp.yaml";
+	YAML::Node config = YAML::LoadFile(config_file);
+	int id=config["id"].as<int>();
+	std::cout<<id<<std::endl;
+	vector<int> hsv_limits=config["param"][config["box"][id].as<std::string>()]["hsv"].as<vector<int> >();
+	for(int i=0;i<hsv_limits.size();i++){
+		std::cout<<hsv_limits[i]<<std::endl;
+	}
 
 	int iterations = 1000;  // Default number of ICP iterations
 

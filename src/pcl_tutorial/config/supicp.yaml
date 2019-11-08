@@ -1,0 +1,8 @@
+author: "yee"
+id: 1
+box: ["big","small"]
+param:
+  big: 
+    hsv: [85,125,20,255,20,255]
+  small: 
+    hsv: [100,130,130,255,75,230]

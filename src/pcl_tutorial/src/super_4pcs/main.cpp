@@ -24,10 +24,12 @@
 #include <pcl/registration/icp.h>
 #include <pcl/segmentation/sac_segmentation.h>
 
+#include <yaml-cpp/yaml.h>
+
 #include "pcl_tutorial/hsv_segmentation.h"
 #include "super4pcs_icp.h"
-#include <obj_srv/rgbd_image.h>
-#include <obj_srv/obj_6d.h>
+#include "obj_srv/rgbd_image.h"
+#include "obj_srv/obj_6d.h"
 
 
 
@@ -144,8 +146,16 @@ int main(int argc, char** argv)
     sensor_msgs::Image msg_rgb;
     sensor_msgs::Image msg_depth;
 
+    // load config
+	std::string package_path = ros::package::getPath("pcl_tutorial");
+    std::string config_file=package_path+"/config/supicp.yaml";//"home/yee/ros_ws/grasp_ws/src/pcl_tutorial/config/supicp.yaml";
+	YAML::Node config = YAML::LoadFile(config_file);
+	int id=config["id"].as<int>();
+	std::cout<<id<<std::endl;
+	vector<int> hsv_limits=config["param"][config["box"][id].as<std::string>()]["hsv"].as<vector<int> >();
+
     //HSVSegmentation hsv(85,125,20,255,20,255);
-    HSVSegmentation hsv(100,123, 150,255,85,220);
+    HSVSegmentation hsv(hsv_limits[0],hsv_limits[1],hsv_limits[2],hsv_limits[3],hsv_limits[4],hsv_limits[5]);
     sup_icp.initMatcher(argc,argv);
 
 	

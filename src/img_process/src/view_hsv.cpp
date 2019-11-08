@@ -120,11 +120,11 @@ int main(int argc, char** argv)
 	int image_num=0;
 
 	//HSVSegmentation hsv(85,125,20,255,20,255);	//big box
-	HSVSegmentation hsv(100,123, 150,255,85,220);	// small box
+	HSVSegmentation hsv(100,130, 130,255,75,230);	// small box
 
 	for(int i=0;i<image_files.size();i++){
 		image_num++;
-		std::cout<<"view image:"<<image_num<<std::endl;
+		std::cout<<"view image:"<<image_files[i]<<std::endl;
 		Mat src=imread(image_files[i]);
 		hsv.setSrc(src);
 		hsv.getMask(final_mask);
@@ -132,6 +132,7 @@ int main(int argc, char** argv)
 		
 		imshow("mask",final_mask);
 		imshow("seg", dst);
+		imshow("src", src);
 		waitKey(0);
 	}
 	return 0;

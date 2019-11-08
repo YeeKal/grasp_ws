@@ -6,6 +6,11 @@ add_compile_options(-std=c++11)
 set(CMAKE_BUILD_TYPE Release)
 
 find_package( OpenCV  REQUIRED)
+
+#YAML-CPP
+FIND_PACKAGE(yaml-cpp REQUIRED)
+
+
 find_package(catkin REQUIRED COMPONENTS
   
   roscpp
@@ -22,14 +27,19 @@ find_package(catkin REQUIRED COMPONENTS
 
 
 catkin_package(
-
+  INCLUDE_DIRS include
 )
 
 
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
+  ${YAML_CPP_INCLUDE_DIR}
 )
+
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  PATTERN ".svn" EXCLUDE)
 
 # tutorial
 add_executable(tutorial_icp src/tutorial_icp.cpp)

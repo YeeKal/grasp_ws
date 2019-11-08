@@ -23,7 +23,7 @@ message (STATUS "Super4PCS_LIBRARIES  : ${Super4PCS_LIBRARIES}")
 
 # super4pcs
 #find_package(Super4PCS REQUIRED)
-include_directories(${Super4PCS_INCLUDE_DIR})
+include_directories(${Super4PCS_INCLUDE_DIR} )
 link_directories(${Super4PCS_LIB_DIR})
 
 add_executable(super4pcs_demo super4pcs_demo.cpp)
@@ -33,9 +33,9 @@ add_executable(pcl_super4pcs_demo pcl_super4pcs_demo.cpp)
 target_link_libraries(pcl_super4pcs_demo ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${Super4PCS_LIBRARIES})
 
 add_executable(supicp_demo supicp_demo.cpp)
-target_link_libraries(supicp_demo ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${Super4PCS_LIBRARIES})
+target_link_libraries(supicp_demo ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${Super4PCS_LIBRARIES} ${YAML_CPP_LIBRARIES})
 
 add_executable(main main.cpp)
-target_link_libraries(main ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${Super4PCS_LIBRARIES})
+target_link_libraries(main ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${Super4PCS_LIBRARIES} ${YAML_CPP_LIBRARIES})
 
 
