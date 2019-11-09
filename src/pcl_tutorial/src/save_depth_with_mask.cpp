@@ -22,10 +22,10 @@ static const std::string OPENCV_WINDOW = "Image window";
 using namespace cv;
 using namespace pcl; 
 
-const double camera_cx = 319.5;//325.5//319.5 310.95 310.95
-const double camera_cy = 239.5;//253.5//239.5 234.74 234.74
-const double camera_fx = 570.3422;//518.0//570.3422(openni2) 615.377
-const double camera_fy = 570.3422;//519.0//570.3422(openni2) 615.377
+const double camera_cx =311.61; //319.5;//325.5//319.5 310.95 310.95
+const double camera_cy =238.20; //239.5;//253.5//239.5 234.74 234.74
+const double camera_fx =619.39; //570.3422;//518.0//570.3422(openni2) 615.377
+const double camera_fy =619.39; //570.3422;//519.0//570.3422(openni2) 615.377
 pcl::PointCloud<pcl::PointXYZ>::Ptr scene (new pcl::PointCloud<pcl::PointXYZ> ());
 pcl::PointCloud<pcl::PointXYZRGBA>::Ptr scene_rgb (new pcl::PointCloud<pcl::PointXYZRGBA> ());
 boost::shared_ptr<visualization::CloudViewer> viewer;  
@@ -98,6 +98,7 @@ public:
             {
                 pcl::PointXYZ p;
                 pcl::PointXYZRGBA p_rgb;
+                depth.at<float>(r,c)=depth.at<float>(r,c)/1000.0;//for realsense
                 if(!(depth.at<float>(r,c)>0&&depth.at<float>(r,c)<1.3)){continue;}
                 double scene_z = double(depth.at<float>(r,c));
                 double scene_x = (c - camera_cx) * scene_z / camera_fx;
@@ -119,8 +120,9 @@ public:
             }
         }
 
-        // imshow(topic_name_,cv_ptr->image);
-        // imshow(depth_topic_name_,depth);
+         imshow(topic_name_,cv_ptr->image);
+         imshow(depth_topic_name_,depth);
+         waitKey(5);
 
         if(! viewer->wasStopped()) viewer->showCloud(scene_rgb->makeShared());
 

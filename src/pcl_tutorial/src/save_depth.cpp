@@ -74,7 +74,10 @@ int main(int argc, char ** argv){
         ros::init(argc, argv, "save_depth");  
         ros::NodeHandle nh;  
         cout<< "Press space to record point cloud to a pcd file."<<endl;  
-        string topic_name="/camera/depth_registered/points";
+        string topic_name="/camera/depth/color/points";//"/camera/depth_registered/points";
+        if(argc>1){
+            topic_name=argv[1];
+        }
     
         viewer = createViewer();  
 
