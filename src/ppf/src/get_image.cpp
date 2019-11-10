@@ -26,11 +26,14 @@ public:
     : it_(nh_)
   {
     // Subscrive to input video feed and publish output video feed
-    // image_sub_rgb = it_.subscribe("/camera/rgb/image_rect_color", 1, &ImageConverter::imageCb_rgb, this);///realsense_sr300/rgb ///camera/rgb/image_rect_color
-    // image_sub_depth = it_.subscribe("/camera/depth_registered/image_raw", 1, &ImageConverter::imageCb_depth, this);///realsense_sr300/depth ///camera/depth_registered/image_raw
 
-    image_sub_rgb = it_.subscribe("/camera/color/image_raw", 1, &ImageConverter::imageCb_rgb, this);///realsense_sr300/rgb ///camera/rgb/image_rect_color
-    image_sub_depth = it_.subscribe("/camera/depth/image_rect_raw", 1, &ImageConverter::imageCb_depth, this);///realsense_sr300/depth ///camera/depth_registered/image_raw
+    // asus
+    image_sub_rgb = it_.subscribe("/camera/rgb/image_rect_color", 1, &ImageConverter::imageCb_rgb, this);///realsense_sr300/rgb ///camera/rgb/image_rect_color
+    image_sub_depth = it_.subscribe("/camera/depth_registered/image_raw", 1, &ImageConverter::imageCb_depth, this);///realsense_sr300/depth ///camera/depth_registered/image_raw
+
+    // realsense
+    // image_sub_rgb = it_.subscribe("/camera/color/image_raw", 1, &ImageConverter::imageCb_rgb, this);///realsense_sr300/rgb ///camera/rgb/image_rect_color
+    // image_sub_depth = it_.subscribe("/camera/depth/image_rect_raw", 1, &ImageConverter::imageCb_depth, this);///realsense_sr300/depth ///camera/depth_registered/image_raw
   }
 
   ~ImageConverter()

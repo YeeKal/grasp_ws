@@ -42,10 +42,10 @@ using namespace cv;
 typedef pcl::PointXYZ PointT;
 typedef pcl::PointCloud<PointT> PointCloudT;
 
-const double camera_cx = 319.5;//325.5//319.5 310.95 310.95
-const double camera_cy = 239.5;//253.5//239.5 234.74 234.74
-const double camera_fx = 570.3422;//518.0//570.3422(openni2) 615.377
-const double camera_fy = 570.3422;//519.0//570.3422(openni2) 615.377
+const double camera_cx =325.2876;// 319.5;//325.5//319.5 310.95 310.95
+const double camera_cy =249.0282;// 239.5;//253.5//239.5 234.74 234.74
+const double camera_fx = 537.3745;//570.3422;//518.0//570.3422(openni2) 615.377
+const double camera_fy = 534.8119;//570.3422;//519.0//570.3422(openni2) 615.377
 pcl::PointCloud<pcl::PointXYZ>::Ptr scene (new pcl::PointCloud<pcl::PointXYZ> ());
 pcl::PointCloud<pcl::PointXYZRGBA>::Ptr scene_rgb (new pcl::PointCloud<pcl::PointXYZRGBA> ());
 pcl::PointCloud<pcl::PointNormal>::Ptr scene_with_normals (new pcl::PointCloud<pcl::PointNormal> ());
