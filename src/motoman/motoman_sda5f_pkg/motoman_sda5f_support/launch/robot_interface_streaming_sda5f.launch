@@ -1,0 +1,21 @@
+
+<!--
+  Manipulator specific version of 'robot_interface_streaming.launch'.
+
+  Defaults provided for sda5f:
+   - 7 joints
+
+  Usage:
+    robot_interface_streaming_sda10f.launch robot_ip:=<value> controller:=<fs100|dx100>
+-->
+<launch>
+	<arg name="robot_ip" default="192.168.1.12"/>
+	<arg name="use_bswap" default="true" />
+
+	<rosparam command="load" file="$(find motoman_sda5f_support)/config/sda5f_motion_interface.yaml" />
+
+	  <include file="$(find motoman_driver)/launch/robot_multigroup_interface_streaming_fs100.launch">
+		<arg name="robot_ip"   value="$(arg robot_ip)" />
+		<arg name="use_bswap"  value="$(arg use_bswap)" />
+	</include>
+</launch>

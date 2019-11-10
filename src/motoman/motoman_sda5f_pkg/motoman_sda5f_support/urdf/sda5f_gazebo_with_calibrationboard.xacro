@@ -1,0 +1,791 @@
+<?xml version="1.0" ?>
+<!-- motoman SDA5F dual arm robot -->
+<robot name="motoman_sda5f" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <!-- Import all Gazebo-customization elements, including Gazebo colors -->
+  <xacro:include filename="$(find motoman_sda5f_support)/urdf/sda5f_normalcamera.gazebo" />
+  <!-- Import Rviz colors -->
+  <xacro:include filename="$(find motoman_sda5f_support)/urdf/materials.xacro" />
+
+  <!-- Used for fixing robot to Gazebo 'base_link' -->
+  <link name="world"/>
+
+  <joint name="fixed" type="fixed">
+    <parent link="world"/>
+    <child link="base_link"/>
+    <dynamics damping="0.10" friction="0.10"/>
+  </joint>
+
+  <!-- link list -->
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <mesh filename="package://motoman_sda5f_support/meshes/dae/base_link.dae"/>
+      </geometry>
+      <!--material name="blue">
+        <color rgba="0 0 1 1"/>
+      </material-->
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://motoman_sda5f_support/meshes/stl/base_link.stl"/>
+      </geometry>
+      <!--material name="yellow">
+        <color rgba="0 1 1 1"/>
+      </material-->
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0.1" rpy="0 0 0"/>
+      <mass value="5.0"/>
+      <inertia
+	  ixx="0.01" ixy="0.0" ixz="0.0"
+	  iyy="0.01" iyz="0.0"
+	  izz="0.01"/>
+    </inertial>
+  </link>
+  <link name="torso_link_b1">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://motoman_sda5f_support/meshes/dae/torso_link.dae"/>
+      </geometry>
+      <!--material name="silver">
+        <color rgba="0.8 0.8 0.8 1"/>
+      </material-->
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://motoman_sda5f_support/meshes/stl/torso_link.stl"/>
+      </geometry>
+      <!--material name="yellow"/-->
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0.1" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <inertia
+	  ixx="0.01" ixy="0.0" ixz="0.0"
+	  iyy="0.01" iyz="0.0"
+	  izz="0.01"/>
+    </inertial>
+  </link>
+  <!--link name="torso_link_b2">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://motoman_sda5f_support/meshes/stl/torso_link.stl"/>
+      </geometry>
+      <material name="silver">
+        <color rgba="0.8 0.8 0.8 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://motoman_sda5f_support/meshes/dae/torso_link.dae"/>
+      </geometry>
+      <material name="yellow"/>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0.1" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <inertia
+	  ixx="0.01" ixy="0.0" ixz="0.0"
+	  iyy="0.01" iyz="0.0"
+	  izz="0.01"/>
+    </inertial>
+  </link-->
+  <!-- joint list -->
+  <joint name="torso_joint_b1" type="revolute">
+    <parent link="base_link"/>
+    <child link="torso_link_b1"/>
+    <origin rpy="0 0 0" xyz="0.045 0 0.7296"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="100" lower="-2.9570" upper="2.9570" velocity="3.14"/>
+    <dynamics damping="0.10" friction="0.10"/>
+  </joint>
+  <!--joint name="torso_joint_b2" type="revolute">
+    <parent link="base_link"/>
+    <child link="torso_link_b2"/>
+    <origin rpy="0 0 0" xyz="0.045 0 0.7296"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="100" lower="-2.9570" upper="2.9570" velocity="3.14"/>
+    <mimic joint="torso_joint_b1" multiplier="1" offset="0"/>
+  </joint-->
+  <!-- end of joint list -->
+  <link name="arm_left_link_1_s">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://motoman_sda5f_support/meshes/dae/arm_left_link_1_s.dae"/>
+      </geometry>
+      <material name="blue">
+        <color rgba="0.8 0.8 0.8 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://motoman_sda5f_support/meshes/dae/arm_left_link_1_s.dae"/>
+      </geometry>
+      <material name="yellow"/>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0.1" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <inertia
+	  ixx="0.01" ixy="0.0" ixz="0.0"
+	  iyy="0.01" iyz="0.0"
+	  izz="0.01"/>
+    </inertial>
+  </link>
+  <link name="arm_left_link_2_l">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://motoman_sda5f_support/meshes/dae/arm_left_link_2_l.dae"/>
+      </geometry>
+      <material name="silver"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://motoman_sda5f_support/meshes/dae/arm_left_link_2_l.dae"/>
+      </geometry>
+      <material name="yellow"/>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0.1" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <inertia
+	  ixx="0.01" ixy="0.0" ixz="0.0"
+	  iyy="0.01" iyz="0.0"
+	  izz="0.01"/>
+    </inertial>
+  </link>
+  <link name="arm_left_link_3_e">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://motoman_sda5f_support/meshes/dae/arm_left_link_3_e.dae"/>
+      </geometry>
+      <material name="blue"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://motoman_sda5f_support/meshes/dae/arm_left_link_3_e.dae"/>
+      </geometry>
+      <material name="yellow"/>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0.1" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <inertia
+	  ixx="0.01" ixy="0.0" ixz="0.0"
+	  iyy="0.01" iyz="0.0"
+	  izz="0.01"/>
+    </inertial>
+  </link>
+  <link name="arm_left_link_4_u">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://motoman_sda5f_support/meshes/dae/arm_left_link_4_u.dae"/>
+      </geometry>
+      <material name="silver"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://motoman_sda5f_support/meshes/dae/arm_left_link_4_u.dae"/>
+      </geometry>
+      <material name="yellow"/>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0.1" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <inertia
+	  ixx="0.01" ixy="0.0" ixz="0.0"
+	  iyy="0.01" iyz="0.0"
+	  izz="0.01"/>
+    </inertial>
+  </link>
+  <link name="arm_left_link_5_r">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://motoman_sda5f_support/meshes/dae/arm_left_link_5_r.dae"/>
+      </geometry>
+      <material name="blue"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://motoman_sda5f_support/meshes/dae/arm_left_link_5_r.dae"/>
+      </geometry>
+      <material name="yellow"/>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0.1" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <inertia
+	  ixx="0.01" ixy="0.0" ixz="0.0"
+	  iyy="0.01" iyz="0.0"
+	  izz="0.01"/>
+    </inertial>
+  </link>
+  <link name="arm_left_link_6_b">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://motoman_sda5f_support/meshes/dae/arm_left_link_6_b.dae"/>
+      </geometry>
+      <material name="silver"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://motoman_sda5f_support/meshes/dae/arm_left_link_6_b.dae"/>
+      </geometry>
+      <material name="yellow"/>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0.1" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <inertia
+	  ixx="0.01" ixy="0.0" ixz="0.0"
+	  iyy="0.01" iyz="0.0"
+	  izz="0.01"/>
+    </inertial>
+  </link>
+  <link name="arm_left_link_7_t">
+    <visual>
+      <geometry>
+        <mesh filename="package://motoman_sda5f_support/meshes/dae/arm_left_link_7_t.dae"/>
+      </geometry>
+      <material name="blue"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://motoman_sda5f_support/meshes/dae/arm_left_link_7_t.dae"/>
+      </geometry>
+      <material name="yellow"/>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0.1" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <inertia
+	  ixx="0.01" ixy="0.0" ixz="0.0"
+	  iyy="0.01" iyz="0.0"
+	  izz="0.01"/>
+    </inertial>
+  </link>
+  <link name="arm_left_link_tool0"/>
+  <joint name="arm_left_joint_1_s" type="revolute">
+    <parent link="torso_link_b1"/>
+    <child link="arm_left_link_1_s"/>
+    <origin rpy="-1.57 0.0 0" xyz="0.150 0.101 0.1704"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="150" lower="-1.57" upper="4.71" velocity="3.48"/>
+    <dynamics damping="0.10" friction="0.10"/>
+  </joint>
+  <joint name="arm_left_joint_2_l" type="revolute">
+    <parent link="arm_left_link_1_s"/>
+    <child link="arm_left_link_2_l"/>
+    <origin rpy="-1.57 0 -1.57" xyz="0.0195 0.0 0.142"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="150" lower="-1.90" upper="1.90" velocity="3.48"/>
+    <dynamics damping="0.10" friction="0.10"/>
+  </joint>
+  <joint name="arm_left_joint_3_e" type="revolute">
+    <parent link="arm_left_link_2_l"/>
+    <child link="arm_left_link_3_e"/>
+    <origin rpy="-1.57 0 3.14" xyz="0.0 -0.165 -0.0195 "/>
+    <axis xyz="0 0 1"/>
+    <limit effort="150" lower="-2.95" upper="2.95" velocity="3.48"/>
+    <dynamics damping="0.10" friction="0.10"/>
+  </joint>
+  <joint name="arm_left_joint_4_u" type="revolute">
+    <parent link="arm_left_link_3_e"/>
+    <child link="arm_left_link_4_u"/>
+    <origin rpy="-1.57 0 0" xyz="-0.085 0.017 0.105"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="150" lower="-1.57" upper="2.00" velocity="3.48"/>
+    <dynamics damping="0.10" friction="0.10"/>
+  </joint>
+  <joint name="arm_left_joint_5_r" type="revolute">
+    <parent link="arm_left_link_4_u"/>
+    <child link="arm_left_link_5_r"/>
+    <origin rpy="-1.57 0 -1.57" xyz="-0.134 -0.060 -0.017"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="14.7" lower="-3.13" upper="3.13" velocity="3.48"/>
+    <dynamics damping="0.10" friction="0.10"/>
+  </joint>
+  <joint name="arm_left_joint_6_b" type="revolute">
+    <parent link="arm_left_link_5_r"/>
+    <child link="arm_left_link_6_b"/>
+    <origin rpy="0 1.57 -1.57" xyz="0 0.015 -0.136"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="14.7" lower="-1.90" upper="1.90" velocity="4.00"/>
+    <dynamics damping="0.10" friction="0.10"/>
+  </joint>
+  <joint name="arm_left_joint_7_t" type="revolute">
+    <parent link="arm_left_link_6_b"/>
+    <child link="arm_left_link_7_t"/>
+    <origin rpy="-1.57 0 1.57" xyz="0.148 0.0 0.015"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="7.35" lower="-3.13" upper="3.13" velocity="6.10"/>
+    <dynamics damping="0.10" friction="0.10"/>
+  </joint>
+  <joint name="arm_left_joint_tool0" type="fixed">
+    <origin rpy="0 3.14 0" xyz="0 0 -0.05"/>
+    <parent link="arm_left_link_7_t"/>
+    <child link="arm_left_link_tool0"/>
+    <dynamics damping="0.10" friction="0.10"/>
+  </joint>
+  <!-- end of joint list -->
+  <link name="arm_right_link_1_s">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://motoman_sda5f_support/meshes/dae/arm_left_link_1_s.dae"/>
+      </geometry>
+      <material name="blue">
+        <color rgba="0.8 0.8 0.8 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://motoman_sda5f_support/meshes/dae/arm_left_link_1_s.dae"/>
+      </geometry>
+      <material name="yellow"/>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0.1" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <inertia
+	  ixx="0.01" ixy="0.0" ixz="0.0"
+	  iyy="0.01" iyz="0.0"
+	  izz="0.01"/>
+    </inertial>
+  </link>
+  <link name="arm_right_link_2_l">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://motoman_sda5f_support/meshes/dae/arm_left_link_2_l.dae"/>
+      </geometry>
+      <material name="silver"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://motoman_sda5f_support/meshes/dae/arm_left_link_2_l.dae"/>
+      </geometry>
+      <material name="yellow"/>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0.1" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <inertia
+	  ixx="0.01" ixy="0.0" ixz="0.0"
+	  iyy="0.01" iyz="0.0"
+	  izz="0.01"/>
+    </inertial>
+  </link>
+  <link name="arm_right_link_3_e">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://motoman_sda5f_support/meshes/dae/arm_left_link_3_e.dae"/>
+      </geometry>
+      <material name="blue"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://motoman_sda5f_support/meshes/dae/arm_left_link_3_e.dae"/>
+      </geometry>
+      <material name="yellow"/>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0.1" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <inertia
+	  ixx="0.01" ixy="0.0" ixz="0.0"
+	  iyy="0.01" iyz="0.0"
+	  izz="0.01"/>
+    </inertial>
+  </link>
+  <link name="arm_right_link_4_u">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://motoman_sda5f_support/meshes/dae/arm_left_link_4_u.dae"/>
+      </geometry>
+      <material name="silver"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://motoman_sda5f_support/meshes/dae/arm_left_link_4_u.dae"/>
+      </geometry>
+      <material name="yellow"/>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0.1" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <inertia
+	  ixx="0.01" ixy="0.0" ixz="0.0"
+	  iyy="0.01" iyz="0.0"
+	  izz="0.01"/>
+    </inertial>
+  </link>
+  <link name="arm_right_link_5_r">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://motoman_sda5f_support/meshes/dae/arm_left_link_5_r.dae"/>
+      </geometry>
+      <material name="blue"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://motoman_sda5f_support/meshes/dae/arm_left_link_5_r.dae"/>
+      </geometry>
+      <material name="yellow"/>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0.1" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <inertia
+	  ixx="0.01" ixy="0.0" ixz="0.0"
+	  iyy="0.01" iyz="0.0"
+	  izz="0.01"/>
+    </inertial>
+  </link>
+  <link name="arm_right_link_6_b">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://motoman_sda5f_support/meshes/dae/arm_left_link_6_b.dae"/>
+      </geometry>
+      <material name="silver"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://motoman_sda5f_support/meshes/dae/arm_left_link_6_b.dae"/>
+      </geometry>
+      <material name="yellow"/>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0.1" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <inertia
+	  ixx="0.01" ixy="0.0" ixz="0.0"
+	  iyy="0.01" iyz="0.0"
+	  izz="0.01"/>
+    </inertial>
+  </link>
+  <link name="arm_right_link_7_t">
+    <visual>
+      <geometry>
+        <mesh filename="package://motoman_sda5f_support/meshes/dae/arm_left_link_7_t.dae"/>
+      </geometry>
+      <material name="blue"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://motoman_sda5f_support/meshes/dae/arm_left_link_7_t.dae"/>
+      </geometry>
+      <material name="yellow"/>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0.1" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <inertia
+	  ixx="0.01" ixy="0.0" ixz="0.0"
+	  iyy="0.01" iyz="0.0"
+	  izz="0.01"/>
+    </inertial>
+  </link>
+  <link name="arm_right_link_tool0"/>
+  <joint name="arm_right_joint_1_s" type="revolute">
+    <parent link="torso_link_b1"/>
+    <child link="arm_right_link_1_s"/>
+    <origin rpy="1.57 3.14 0" xyz="0.150 -0.101 0.1704"/>
+    <axis xyz="0 0 -1"/>
+    <limit effort="150" lower="-1.57" upper="4.71" velocity="3.48"/>
+    <dynamics damping="0.10" friction="0.10"/>
+  </joint>
+  <joint name="arm_right_joint_2_l" type="revolute">
+    <parent link="arm_right_link_1_s"/>
+    <child link="arm_right_link_2_l"/>
+    <origin rpy="-1.57 0 -1.57" xyz="0.0195 0.0 0.142"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="150" lower="-1.90" upper="1.90" velocity="3.48"/>
+    <dynamics damping="0.10" friction="0.10"/>
+  </joint>
+  <joint name="arm_right_joint_3_e" type="revolute">
+    <parent link="arm_right_link_2_l"/>
+    <child link="arm_right_link_3_e"/>
+    <origin rpy="-1.57 0 3.14" xyz="0.0 -0.165 -0.0195 "/>
+    <axis xyz="0 0 -1"/>
+    <limit effort="150" lower="-2.95" upper="2.95" velocity="3.48"/>
+    <dynamics damping="0.10" friction="0.10"/>
+  </joint>
+  <joint name="arm_right_joint_4_u" type="revolute">
+    <parent link="arm_right_link_3_e"/>
+    <child link="arm_right_link_4_u"/>
+    <origin rpy="-1.57 0 0" xyz="-0.085 0.017 0.105"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="150" lower="-1.57" upper="2.00" velocity="3.48"/>
+    <dynamics damping="0.10" friction="0.10"/>
+  </joint>
+  <joint name="arm_right_joint_5_r" type="revolute">
+    <parent link="arm_right_link_4_u"/>
+    <child link="arm_right_link_5_r"/>
+    <origin rpy="-1.57 0 -1.57" xyz="-0.134 -0.060 -0.017"/>
+    <axis xyz="0 0 -1"/>
+    <limit effort="14.7" lower="-3.13" upper="3.13" velocity="3.48"/>
+    <dynamics damping="0.10" friction="0.10"/>
+  </joint>
+  <joint name="arm_right_joint_6_b" type="revolute">
+    <parent link="arm_right_link_5_r"/>
+    <child link="arm_right_link_6_b"/>
+    <origin rpy="0 1.57 -1.57" xyz="0 0.015 -0.136"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="14.7" lower="-1.90" upper="1.90" velocity="4.00"/>
+    <dynamics damping="0.10" friction="0.10"/>
+  </joint>
+  <joint name="arm_right_joint_7_t" type="revolute">
+    <parent link="arm_right_link_6_b"/>
+    <child link="arm_right_link_7_t"/>
+    <origin rpy="-1.57 0 1.57" xyz="0.148 0.0 0.015"/>
+    <axis xyz="0 0 -1"/>
+    <limit effort="7.35" lower="-3.13" upper="3.13" velocity="6.10"/>
+    <dynamics damping="0.10" friction="0.10"/>
+  </joint>
+  <joint name="arm_right_joint_tool0" type="fixed">
+    <origin rpy="0 3.14 0" xyz="0 0 -0.05"/>
+    <parent link="arm_right_link_7_t"/>
+    <child link="arm_right_link_tool0"/>
+    <dynamics damping="0.10" friction="0.10"/>
+  </joint>
+  <!-- end of joint list -->
+
+  <!-- sensors link -->
+
+  <link name="kinect_link">
+    <collision>
+      <origin xyz="-0.0 0.097458 0" rpy="0 0 0"/>
+      <geometry>
+	<box size="0.1 0.25 0.1"/>
+      </geometry>
+    </collision>
+
+    <visual>
+      <material name="black"/>
+      <origin xyz="0 0.097458 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://motoman_sda5f_support/meshes/stl/kinectv2.stl"/>
+      </geometry>
+    </visual>
+
+    <inertial>
+      <mass value="0.935"/>
+      <inertia ixx="0.0053937" ixy="0" ixz="0"
+               iyy="0.00085311" iyz="0"
+               izz="0.00519899" />
+    </inertial>
+  </link>
+
+  <joint name="kinect_joint" type="fixed">
+    <axis xyz="0 1 0" />
+    <origin xyz="0.221268 -0.097458 0.333673" rpy="0.003 0.574 0.024"/>
+    <parent link="torso_link_b1"/>
+    <child link="kinect_link"/>
+  </joint>
+
+
+
+
+  <link name="calibration_link">
+    <visual>
+      <geometry>
+        <mesh filename="package://motoman_sda5f_support/meshes//dae//calibration.dae"/>
+      </geometry>
+    </visual>
+  </link>
+
+
+  <joint name="calibration_joint" type="fixed">
+    <axis xyz="0 1 0" />
+    <origin xyz="0.0 0.1 -0.15 " rpy="-1.57 0 0 "/>
+    <parent link="arm_left_link_7_t"/>
+    <child link="calibration_link"/>
+  </joint>
+
+
+
+  <!-- end of sensors link -->
+
+  <!-- transmission -->
+
+  <transmission name="torso_joint_b1_trans">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="torso_joint_b1">
+      <hardwareInterface>PositionJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="torso_joint_b1_motor">
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <transmission name="arm_left_joint_1_s_trans">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="arm_left_joint_1_s">
+      <hardwareInterface>PositionJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="arm_left_joint_1_s_motor">
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <transmission name="arm_left_joint_2_l_trans">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="arm_left_joint_2_l">
+      <hardwareInterface>PositionJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="arm_left_joint_2_l_motor">
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <transmission name="arm_left_joint_3_e_trans">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="arm_left_joint_3_e">
+      <hardwareInterface>PositionJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="arm_left_joint_3_e_motor">
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <transmission name="arm_left_joint_4_u_trans">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="arm_left_joint_4_u">
+      <hardwareInterface>PositionJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="arm_left_joint_4_u_motor">
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <transmission name="arm_left_joint_5_r_trans">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="arm_left_joint_5_r">
+      <hardwareInterface>PositionJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="arm_left_joint_5_r_motor">
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <transmission name="arm_left_joint_6_b_trans">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="arm_left_joint_6_b">
+      <hardwareInterface>PositionJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="arm_left_joint_6_b_motor">
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <transmission name="arm_left_joint_7_t_trans">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="arm_left_joint_7_t">
+      <hardwareInterface>PositionJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="arm_left_joint_7_t_motor">
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <transmission name="arm_right_joint_1_s_trans">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="arm_right_joint_1_s">
+      <hardwareInterface>PositionJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="arm_right_joint_1_s_motor">
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <transmission name="arm_right_joint_2_l_trans">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="arm_right_joint_2_l">
+      <hardwareInterface>PositionJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="arm_right_joint_2_l_motor">
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <transmission name="arm_right_joint_3_e_trans">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="arm_right_joint_3_e">
+      <hardwareInterface>PositionJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="arm_right_joint_3_e_motor">
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <transmission name="arm_right_joint_4_u_trans">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="arm_right_joint_4_u">
+      <hardwareInterface>PositionJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="arm_right_joint_4_u_motor">
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <transmission name="arm_right_joint_5_r_trans">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="arm_right_joint_5_r">
+      <hardwareInterface>PositionJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="arm_right_joint_5_r_motor">
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <transmission name="arm_right_joint_6_b_trans">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="arm_right_joint_6_b">
+      <hardwareInterface>PositionJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="arm_right_joint_6_b_motor">
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <transmission name="arm_right_joint_7_t_trans">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="arm_right_joint_7_t">
+      <hardwareInterface>PositionJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="arm_right_joint_7_t_motor">
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+
+</robot>
+

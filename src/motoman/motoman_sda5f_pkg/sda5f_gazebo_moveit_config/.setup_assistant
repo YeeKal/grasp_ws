@@ -1,0 +1,10 @@
+moveit_setup_assistant_config:
+  URDF:
+    package: motoman_sda5f_support
+    relative_path: urdf/sda5f_gazebo_with_gripper.xacro
+  SRDF:
+    relative_path: config/motoman_sda5f.srdf
+  CONFIG:
+    author_name: Qiang Qiu
+    author_email: qiu6401@163.com
+    generated_timestamp: 1516090836
