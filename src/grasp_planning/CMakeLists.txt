@@ -45,8 +45,7 @@ catkin_package(
 include_directories(
 # include
   ${catkin_INCLUDE_DIRS}
-  "include/sda5f_ompl_planning"
-  "/home/yee/ros_ws/yeebot/devel/include"
+  "../../devel/include" 
 )
 include_directories(SYSTEM ${Boost_INCLUDE_DIR} ${EIGEN3_INCLUDE_DIRS})
 link_directories(${catkin_LIBRARY_DIRS})

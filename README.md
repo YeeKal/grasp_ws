@@ -38,9 +38,23 @@ initial states:
 ('P = ', [537.691162109375, 0.0, 327.7376611684158, 0.0, 0.0, 537.2880859375, 251.69179250104935, 0.0, 0.0, 0.0, 1.0, 0.0])
 ```
 
-## depen
+## dependecies
 
+#### ros package inside
 
-- [Sophus] (https://github.com/stonier/sophus) 
-- [Ceres](http://ceres-solver.org/) 
-- [gflags](https://github.com/gflags/gflags)
+- ork_ws
+- motoman
+
+#### ros package extral
+
+- [yeebot_core]()
+- openni2 driver
+- realsense driver
+
+#### system package
+
+- [pcl]() along with ros
+- [OpenCV]() along with ros
+- [Sophus](https://github.com/stonier/sophus) for `calibration`
+- [Ceres](http://ceres-solver.org/) for `calibration`
+- [gflags](https://github.com/gflags/gflags) for `calibration`
