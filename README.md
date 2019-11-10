@@ -37,3 +37,10 @@ initial states:
 ('R = ', [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0])
 ('P = ', [537.691162109375, 0.0, 327.7376611684158, 0.0, 0.0, 537.2880859375, 251.69179250104935, 0.0, 0.0, 0.0, 1.0, 0.0])
 ```
+
+## depen
+
+
+- [Sophus] (https://github.com/stonier/sophus) 
+- [Ceres](http://ceres-solver.org/) 
+- [gflags](https://github.com/gflags/gflags)
