@@ -35,7 +35,7 @@ find_package(catkin REQUIRED COMPONENTS
     std_msgs
     message_generation
     tf
-    rgbd_srv
+    obj_srv
     )
 
 
@@ -99,7 +99,7 @@ add_executable(grab_data_node
     src/CalibrationTool.cpp
     src/ArucoPlane.cpp)
 
-add_dependencies(grab_data_node rgbd_srv_gencpp)
+add_dependencies(grab_data_node obj_srv_gencpp)
 
 
 target_link_libraries(grab_data_node

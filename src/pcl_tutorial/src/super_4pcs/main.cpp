@@ -42,10 +42,10 @@ using namespace cv;
 typedef pcl::PointXYZ PointT;
 typedef pcl::PointCloud<PointT> PointCloudT;
 
-const double camera_cx =325.2876;// 319.5;//325.5//319.5 310.95 310.95
-const double camera_cy =249.0282;// 239.5;//253.5//239.5 234.74 234.74
-const double camera_fx = 537.3745;//570.3422;//518.0//570.3422(openni2) 615.377
-const double camera_fy = 534.8119;//570.3422;//519.0//570.3422(openni2) 615.377
+const double camera_cx =325.5969;//319.5;//325.5//319.5 310.95 310.95
+const double camera_cy =240.0283;//239.5;// 253.5//239.5 234.74 234.74
+const double camera_fx =536.3783;//570.3422;//518.0//570.3422(openni2) 615.377
+const double camera_fy =539.4028;// 570.3422;//519.0//570.3422(openni2) 615.377
 pcl::PointCloud<pcl::PointXYZ>::Ptr scene (new pcl::PointCloud<pcl::PointXYZ> ());
 pcl::PointCloud<pcl::PointXYZRGBA>::Ptr scene_rgb (new pcl::PointCloud<pcl::PointXYZRGBA> ());
 pcl::PointCloud<pcl::PointNormal>::Ptr scene_with_normals (new pcl::PointCloud<pcl::PointNormal> ());
@@ -139,7 +139,7 @@ int main(int argc, char** argv)
     }
     ros::init(argc, argv, "main");
     ros::NodeHandle nh;
-    ros::ServiceClient client = nh.serviceClient<obj_srv::rgbd_image>("get_image");
+    ros::ServiceClient client = nh.serviceClient<obj_srv::rgbd_image>("kinect_server");
     ros::ServiceServer service = nh.advertiseService("recognize_block", recognizeBlock);
     obj_srv::rgbd_image srv;
     srv.request.start = true;
@@ -211,7 +211,8 @@ int main(int argc, char** argv)
             for (int c=0;c<rgb.cols;c++)
             {
                 pcl::PointXYZ p;
-                if(!(depth.at<float>(r,c)>0&&depth.at<float>(r,c)<1.3)){continue;}
+                depth.at<float>(r,c)=double(depth.at<float>(r,c))/1000.0;
+                if(!(depth.at<float>(r,c)>0&&depth.at<float>(r,c)<1.5)){continue;}
                 double scene_z = double(depth.at<float>(r,c));
                 double scene_x = (c - camera_cx) * scene_z / camera_fx;
                 double scene_y = (r - camera_cy) * scene_z / camera_fy;
@@ -228,7 +229,8 @@ int main(int argc, char** argv)
             {
                 pcl::PointXYZRGBA p_rgb;
                 //scene
-                if(!(depth_copy.at<float>(r,c)>0&&depth_copy.at<float>(r,c)<1.3)){continue;}
+                depth_copy.at<float>(r,c)=double(depth_copy.at<float>(r,c))/1000.0;
+                if(!(depth_copy.at<float>(r,c)>0&&depth_copy.at<float>(r,c)<1.5)){continue;}
                 double scene_z = double(depth_copy.at<float>(r,c));
                 double scene_x = (c - camera_cx) * scene_z / camera_fx;
                 double scene_y = (r - camera_cy) * scene_z / camera_fy;

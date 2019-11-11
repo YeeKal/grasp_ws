@@ -13,7 +13,7 @@
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_listener.h>
 #include <tf/transform_datatypes.h>
-#include <lsd6d_srv/poses.h>
+#include <obj_srv/obj_6d.h>
 #include <motoman_msgs/WriteSingleIO.h>
 
 // MoveIt!
@@ -26,6 +26,12 @@
 #include <moveit_msgs/DisplayTrajectory.h>
 #include <moveit_msgs/AttachedCollisionObject.h>
 #include <moveit_msgs/CollisionObject.h>
+
+#include <yeebot_core/planning_context.h>
+#include <yeebot_core/planning_manager.h>
+#include <yeebot_core/robot_visual_tools.h>
+#include <yeebot_commute/JointInfo.h>
+#include <yeebot_core/cbirrt.h>
 
 using namespace std;
 
@@ -144,8 +150,8 @@ int main(int argc, char **argv)
     co.primitive_poses.push_back(co_pose);
     pub_co.publish(co);
 
-    ros::ServiceClient client_obj = node_handle.serviceClient<lsd6d_srv::poses>("/obj_poses");
-    lsd6d_srv::poses srv_poses;
+    ros::ServiceClient client_obj = node_handle.serviceClient<obj_srv::obj_6d>("/obj_poses");
+    obj_srv::obj_6d srv_poses;
     srv_poses.request.start = 1;
     ros::ServiceClient client_griper = node_handle.serviceClient<motoman_msgs::WriteSingleIO>("/write_single_io");
     motoman_msgs::WriteSingleIO srv_io_open;
@@ -220,11 +226,11 @@ int main(int argc, char **argv)
         lr.waitForTransform("/base_link", "/camera_link", ros::Time(0), ros::Duration(10.0));
         lr.lookupTransform("/base_link", "/camera_link", ros::Time(0), transform_camera);
         client_obj.call(srv_poses);
-        geometry_msgs::PoseArray pose_array = srv_poses.response.pose_array;
+        geometry_msgs::PoseArray pose_array = srv_poses.response.obj_array;
         while (pose_array.poses.size() < 1)
         {
             client_obj.call(srv_poses);
-            pose_array = srv_poses.response.pose_array;
+            pose_array = srv_poses.response.obj_array;
         }
         geometry_msgs::Pose pose = pose_array.poses[0];
         tf::Transform transform_pose;

@@ -47,11 +47,12 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   "../../devel/include" 
 )
+
 include_directories(SYSTEM ${Boost_INCLUDE_DIR} ${EIGEN3_INCLUDE_DIRS})
 link_directories(${catkin_LIBRARY_DIRS})
 
-# add_executable(dual_arm src/dual_arm.cpp)
-# target_link_libraries(dual_arm ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+add_executable(grasp_box src/grasp_box.cpp)
+target_link_libraries(grasp_box ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 add_executable(cbirrt_demo src/cbirrt_demo.cpp)
 target_link_libraries(cbirrt_demo ${catkin_LIBRARIES} ${Boost_LIBRARIES})

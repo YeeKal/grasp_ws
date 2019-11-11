@@ -1,7 +1,7 @@
 #include "CommonInclude.h"
 #include "CalibrationTool.h"
 #include "ArucoPlane.h"
-#include "rgbd_srv/rgbd.h"
+#include "obj_srv/rgbd_image.h"
 
 using namespace std;
 using namespace cv;
@@ -74,8 +74,8 @@ int main(int argc, char** argv)
     Mat rgb_image, rgb_temp;
     Mat depth_image;
     ros::NodeHandle nh2;
-    ros::ServiceClient client = nh2.serviceClient<rgbd_srv::rgbd> ( RGBDserviceName ); // bind client to server
-    rgbd_srv::rgbd srv;   // serivce type
+    ros::ServiceClient client = nh2.serviceClient<obj_srv::rgbd_image> ( RGBDserviceName ); // bind client to server
+    obj_srv::rgbd_image srv;   // serivce type
     srv.request.start = true;
     sensor_msgs::Image msg_rgb;
     sensor_msgs::Image msg_depth;
@@ -160,6 +160,7 @@ int main(int argc, char** argv)
                 transform     = pArucoPlane->getTransform().cast<float>();
                 transform_inv = transform.inverse();
                 pArucoPlane->drawingAxis(rgb_temp);
+                pArucoPlane->drawingCube(rgb_temp);
             } else {
                 cout << "WARNING:  No Aruco Plane been Viewed !" << endl;
             }
@@ -178,6 +179,7 @@ int main(int argc, char** argv)
         {
             for (int c=0;c<depth_image.cols;c++)
             {
+                depth_image.ptr<float> ( r ) [c] =depth_image.ptr<float> ( r ) [c] /1000.0;//YEE:;correct the meter unit
                 pcl::PointXYZRGBA p;
                 if ( ! ( depth_image.ptr<float> ( r ) [c] > 0 )
                      || depth_image.ptr<float> ( r ) [c] > 2.0 )
@@ -196,14 +198,14 @@ int main(int argc, char** argv)
 
                 if ( useQrExtractor && validAruco) {
                     Eigen::Vector4f scene_point;
-                    scene_point << scenePoint(0),scenePoint(1),scenePoint(2),1;
+                    scene_point << scenePoint(0),scenePoint(1),scenePoint(2),1.0;
                     Eigen::Matrix<float,4,1> world_point;
                     world_point = transform_inv * scene_point;
 
                     if( (abs(world_point(0)) > cubeSide/2)  ||  // outside of cube bundary
                             (abs(world_point(1)) > cubeSide/2) ||
                             (world_point(2) > cubeSide) ||
-                            (world_point(2) < 0.03f))
+                            (world_point(2) < 0.05f))
                     {
                         continue;
                     }

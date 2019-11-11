@@ -1,8 +1,13 @@
 author: "yee"
 id: 1
 box: ["big","small"]
+camera: ["kinect","realsense"]
 param:
   big: 
     hsv: [85,125,20,255,20,255]
   small: 
     hsv: [100,130,130,255,75,230]
+  kinect:
+    matrixk: [325.5969,240.0283,536.3783,539.4028]
+  realsense:
+    matrixk: [325.5969,240.0283,536.3783,539.4028]

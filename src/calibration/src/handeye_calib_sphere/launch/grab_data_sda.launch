@@ -18,7 +18,7 @@
   <arg name="cameraIntrinsicInput"  default="$(find handeye_calib_sphere)/camera_intrinsic_color_realsense2.xml" />
 
 
-  <arg name="RGBDserviceName"  default="realsense2_server" />
+  <arg name="RGBDserviceName"  default="kinect_server" />
 
   <node pkg="handeye_calib_sphere" type="grab_data_node" name="grab_data_node" output="screen">
   <!-- handeye_calib_camodocal arg pass -->

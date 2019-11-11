@@ -36,24 +36,33 @@ initial states:
 ('K = ', [537.3745458137307, 0.0, 325.28760172950103, 0.0, 534.8118748679537, 249.0282301349994, 0.0, 0.0, 1.0])
 ('R = ', [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0])
 ('P = ', [537.691162109375, 0.0, 327.7376611684158, 0.0, 0.0, 537.2880859375, 251.69179250104935, 0.0, 0.0, 0.0, 1.0, 0.0])
+
+# asus 2
+*** Added sample 152, p_x = 0.661, p_y = 0.708, p_size = 0.253, skew = 0.724
+('D = ', [-0.010767126205035457, 0.02878932007658363, -0.007516792631713471, -0.003062193530694651, 0.0])
+('K = ', [536.3783314976719, 0.0, 325.59688771858265, 0.0, 539.4028276436596, 240.028337450314, 0.0, 0.0, 1.0])
+('R = ', [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0])
+('P = ', [541.3510131835938, 0.0, 323.52929686348944, 0.0, 0.0, 542.7696533203125, 236.24413879678468, 0.0, 0.0, 0.0, 1.0, 0.0])
+
 ```
 
 ## dependecies
 
 #### ros package inside
 
-- ork_ws
-- motoman
+- [ork_ws]()
+- motoman sda5f driver
+- [calibration](https://github.com/lixiny/Handeye-Calibration-ROS)
 
 #### ros package extral
 
-- [yeebot_core]()
+- [yeebot_core](https://github.com/YeeKal/yeebot)
 - openni2 driver
 - realsense driver
 
 #### system package
 
-- [pcl]() along with ros
+- [PCL]() along with ros
 - [OpenCV]() along with ros
 - [Sophus](https://github.com/stonier/sophus) for `calibration`
 - [Ceres](http://ceres-solver.org/) for `calibration`
