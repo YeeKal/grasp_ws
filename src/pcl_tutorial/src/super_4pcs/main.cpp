@@ -211,7 +211,7 @@ int main(int argc, char** argv)
             for (int c=0;c<rgb.cols;c++)
             {
                 pcl::PointXYZ p;
-                depth.at<float>(r,c)=double(depth.at<float>(r,c))/1000.0;
+                //depth.at<float>(r,c)=double(depth.at<float>(r,c))/1000.0;
                 if(!(depth.at<float>(r,c)>0&&depth.at<float>(r,c)<1.5)){continue;}
                 double scene_z = double(depth.at<float>(r,c));
                 double scene_x = (c - camera_cx) * scene_z / camera_fx;
@@ -229,7 +229,7 @@ int main(int argc, char** argv)
             {
                 pcl::PointXYZRGBA p_rgb;
                 //scene
-                depth_copy.at<float>(r,c)=double(depth_copy.at<float>(r,c))/1000.0;
+                //depth_copy.at<float>(r,c)=double(depth_copy.at<float>(r,c))/1000.0;
                 if(!(depth_copy.at<float>(r,c)>0&&depth_copy.at<float>(r,c)<1.5)){continue;}
                 double scene_z = double(depth_copy.at<float>(r,c));
                 double scene_x = (c - camera_cx) * scene_z / camera_fx;
