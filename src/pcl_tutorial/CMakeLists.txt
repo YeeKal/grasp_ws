@@ -122,6 +122,8 @@ add_executable(save_depth_with_mask src/save_depth_with_mask.cpp)
 target_link_libraries(save_depth_with_mask ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 add_subdirectory(src/super_4pcs)
+add_subdirectory(src/laser)
+
 
 
 

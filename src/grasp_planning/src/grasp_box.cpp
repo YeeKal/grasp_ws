@@ -86,7 +86,7 @@ int main(int argc, char **argv)
     Eigen::Matrix3d prot;
     Eigen::Vector3d ptrans;
     prot=Eigen::AngleAxisd(-M_PI*0.5,Eigen::Vector3d::UnitX())*Eigen::AngleAxisd(-M_PI*0.5,Eigen::Vector3d::UnitZ());
-    ptrans<<1.145-0.18,-0.695+0.1,1.06;
+    ptrans<<1.145-0.18,-0.695+0.1,1.10;
     pose1.prerotate(prot);
     pose1.pretranslate(ptrans);
 
