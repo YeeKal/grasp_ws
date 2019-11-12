@@ -79,6 +79,12 @@ int main(int argc,char **argv){
     pm->updateRobotState();
     yeebot::PlanningContextPtr pc,pp;
 
+    std::cout<<"wait for service..\n";
+    pm->execute_action_client_->waitForServer();
+    if(! pm->execute_action_client_->isServerConnected()){
+        std::cout<<"server is not connected.\n";
+    }
+
     pc.reset(new yeebot::PlanningContext(planning_spec,pm,yeebot::PlanType::NORMAL));
     pp.reset(new yeebot::PlanningContext(planning_spec,pm,yeebot::PlanType::AXIS_PROJECT));
     yeebot::KineKdlPtr kine_kdl=pp->kine_kdl_;
@@ -265,7 +271,7 @@ if(iter_num>1){
 //move from jnv3 to jnv1
     std::cout<<"move from pose3 to ref_jnv"<<std::endl;
 
-    pc->setStartAndGoalStates(jnv3,jnv2);
+    pp->setStartAndGoalStates(jnv3,jnv2);
     if(!pc->plan(time_plan_normal)){
         ros::shutdown();
         return 0;
@@ -273,7 +279,7 @@ if(iter_num>1){
     std::cout<<"path num"<<pc->ss_->getProblemDefinition()->getSolutionCount();
 
     //std::cout<<"time:"<<time_ik_end-time_ik_start<<std::endl;
-    pc->getTrajectoryMsg(robot_trajectory);
+    pp->getTrajectoryMsg(robot_trajectory);
     std::cout<<"points number:"<<robot_trajectory.joint_trajectory.points.size()<<std::endl;
     display_trajectory.trajectory.push_back(robot_trajectory);
     display_publisher.publish(display_trajectory);
@@ -282,7 +288,7 @@ if(iter_num>1){
     pm->execute(robot_trajectory,false);
     ROS_INFO("trajectory completed.");
     display_trajectory.trajectory.clear();
-    pc->ss_->clear();
+    pp->ss_->clear();
    
     std::cout<<"all completed."<<std::endl;
     sleep(2.0);

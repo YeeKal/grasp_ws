@@ -12,7 +12,9 @@ Panels:
         - /RobotModel1/Links1
         - /RobotModel1/Links1/arm_left_link_tool01
         - /RobotModel1/Links1/arm_right_link_tool01
+        - /TF1
         - /TF1/Frames1
+        - /TF1/Tree1
         - /MarkerArray1
       Splitter Ratio: 0.742560029
     Tree Height: 352
@@ -220,7 +222,7 @@ Visualization Manager:
         Interactive Marker Size: 0.25
         Joint Violation Color: 255; 0; 255
         Planning Group: arm_right
-        Query Goal State: true
+        Query Goal State: false
         Query Start State: false
         Show Workspace: false
         Start State Alpha: 0.5
@@ -533,25 +535,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 2.92504525
+      Distance: 2.27348256
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.104115069
-        Y: -0.00370976329
-        Z: -7.09561334e-07
+        X: 0.62911135
+        Y: -0.511128783
+        Z: -9.4797997e-07
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.0500000007
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.434792966
+      Pitch: 0.589792192
       Target Frame: base_link
       Value: XYOrbit (rviz)
-      Yaw: 6.17131138
+      Yaw: 1.24312794
     Saved: ~
 Window Geometry:
   Displays:
@@ -571,5 +573,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1855
-  X: 65
-  Y: 144
+  X: 2050
+  Y: 44
