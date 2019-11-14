@@ -23,6 +23,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
 
   obj_srv
+  laser_line_extraction
 )
 
 

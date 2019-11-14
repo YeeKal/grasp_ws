@@ -1,5 +1,10 @@
 The box grasping workspace for master thesis.
 
+## 2019-11-13
+
+- [laser-line-extraction](https://github.com/kam3k/laser_line_extraction)
+- [laser-line-segment](https://github.com/ghm0819/laser-line-segment)
+
 #### help command
 
 ```python
@@ -14,6 +19,9 @@ rosrun pcl_tutorial save_depth_with_mask /camera/color/image_raw /camera/depth/i
 
 # main
 rosrun pcl_tutorial main reso/box_small/thin.pcd -o 0.7 -d 0.01 -t 1000 -n 100 -it 100
+
+# laser line
+roslaunch laser_line_extraction example.launch
 
 '''
 sda
