@@ -21,6 +21,7 @@ find_package(catkin REQUIRED COMPONENTS
   cv_bridge
   image_transport
   sensor_msgs
+  laser_geometry
 
   obj_srv
   laser_line_extraction

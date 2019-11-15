@@ -36,7 +36,8 @@ public:
   void setMinSplitDist(double);
   void setOutlierDist(double);
 
-private:
+//private:
+
   // Data structures
   CachedData c_data_;
   RangeData r_data_;

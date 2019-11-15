@@ -1,9 +1,7 @@
 The box grasping workspace for master thesis.
 
-## 2019-11-13
-
-- [laser-line-extraction](https://github.com/kam3k/laser_line_extraction)
-- [laser-line-segment](https://github.com/ghm0819/laser-line-segment)
+Content:
+- [dependecies](#dependecies)
 
 #### help command
 
@@ -26,6 +24,7 @@ rosrun pcl_tutorial counter_pose 2.0 0.65,0.75
 # tf
 rosrun tf static_transform_publisher  0.00662214  0.0339903 -0.0687947  0.919409 -0.392716 0.0021969 0.0213767 arm_left_link_7_t camera_rgb_optical_frame 100
 
+hokuyo: 40hz
 
 '''
 sda
@@ -88,6 +87,7 @@ right gripper:
 - openni2 driver
 - realsense driver
 - hokuyo driver: urg-node
+- [laser_geometry](https://wiki.ros.org/laser_geometry)
 
 #### system package
 
