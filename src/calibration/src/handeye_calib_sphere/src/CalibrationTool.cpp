@@ -46,6 +46,34 @@ void generateSphereFragment(pcl::PointCloud<pcl::PointXYZRGBA>::Ptr model, Eigen
 
 }
 
+
+void extractPlaneFeatureFromCloud(pcl::PointCloud<pcl::PointXYZRGBA>::Ptr& cloud_source,
+                                  pcl::PointCloud<pcl::PointXYZRGBA>::Ptr& cloud_destin)
+{
+    // creat the filtering object
+    pcl::ModelCoefficients::Ptr coefficient(new pcl::ModelCoefficients());
+    // creat the inliers indices object
+    pcl::PointIndices::Ptr inliers(new pcl::PointIndices());
+    // create the segmentation object
+    pcl::SACSegmentation<pcl::PointXYZRGBA> seg;
+    // create the extract object
+    pcl::ExtractIndices<pcl::PointXYZRGBA> extract;
+
+    seg.setOptimizeCoefficients(true);
+    seg.setModelType(pcl::SACMODEL_PLANE);
+    seg.setMethodType(pcl::SAC_RANSAC);
+    seg.setMaxIterations(1000);
+    seg.setDistanceThreshold(0.01);
+
+    seg.setInputCloud(cloud_source);
+    seg.segment(*inliers, *coefficient);
+
+    extract.setInputCloud(cloud_source);
+    extract.setIndices(inliers);
+    extract.setNegative(true);
+    extract.filter(*cloud_destin);
+}
+
 void deprojectPixelToPoint(Eigen::Vector3f& point, int pixel_coloum, int pixel_row, float depth, cv::Mat& cameraMatrix, cv::Mat& distCoeffs)
 {
     float m_px, m_py, m_fx, m_fy, coeffs[5];

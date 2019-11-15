@@ -73,7 +73,6 @@ bool ArucoPlane::calculateExtrinsicFromImage(cv::Mat &_colorImg)
 
     if (markerIds.size() == 0)
     {
-        cout << "no qr code found" << endl;
         return false;
     }
 

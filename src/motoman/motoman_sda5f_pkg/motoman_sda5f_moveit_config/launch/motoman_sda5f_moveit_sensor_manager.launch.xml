@@ -1,6 +1,6 @@
 <launch>
     <rosparam command="load" file="$(find motoman_sda5f_moveit_config)/config/sensors_kinect.yaml" />
     <node pkg="tf" type="static_transform_publisher" name="camera_link_broadcaster" args="0.267563  -0.114608  1.055919  0.621576  -0.620896  0.318589  -0.355855 /base_link /kinect2_rgb_optical_frame 100" />
-   
-    <node pkg="tf" type="static_transform_publisher" name="realsense_link_broadcaster" args=" 0.036592  0.055663  -0.106688  0.267059  -0.668658  -0.266653  -0.640681 /arm_left_link_7_t camera_link 100"/>
+
+     <node pkg="tf" type="static_transform_publisher" name="realsense_link_broadcaster" args=" 0.00662214  0.0339903 -0.0687947  0.919409 -0.392716 0.0021969 0.0213767 /arm_left_link_7_t camera_rgb_optical_frame 100"/>
 </launch>

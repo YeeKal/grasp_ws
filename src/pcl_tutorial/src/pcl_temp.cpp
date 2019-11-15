@@ -31,7 +31,7 @@ int main (int argc, char** argv)
 	//test
 	Eigen::Affine3d ini_pose=Eigen::Affine3d::Identity();
 	Eigen::Matrix3d ini_rot;
-    ini_rot=Eigen::AngleAxisd(-M_PI/4,Eigen::Vector3d::UnitZ())*Eigen::AngleAxisd(M_PI,Eigen::Vector3d::UnitX());
+    ini_rot=Eigen::AngleAxisd(-M_PI*3/4,Eigen::Vector3d::UnitZ());//*Eigen::AngleAxisd(M_PI,Eigen::Vector3d::UnitX());
     Eigen::Quaterniond qua(ini_rot);
 	std::cout<<qua.x()<<" "<<qua.y()<<" "<<qua.z()<<" "<<qua.w()<<std::endl;
 	//

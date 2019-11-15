@@ -54,6 +54,10 @@ link_directories(${catkin_LIBRARY_DIRS})
 add_executable(grasp_box src/grasp_box.cpp)
 target_link_libraries(grasp_box ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
+add_executable(grasp_based_laser src/grasp_based_laser.cpp)
+target_link_libraries(grasp_based_laser ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+
+
 add_executable(cbirrt_demo src/cbirrt_demo.cpp)
 target_link_libraries(cbirrt_demo ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 

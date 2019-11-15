@@ -5,8 +5,9 @@
   <cols>3</cols>
   <dt>f</dt>
   <data>
-    536.3783 0. 325.5969 0.
-    539.4028 240.0283 0. 0. 1.
+    536.3783      0.       325.5969 
+    0.            539.4028 240.0283 
+    0.            0.        1.
     </data></camera_matrix>
 <distortion_coeffs type_id="opencv-matrix">
   <rows>1</rows>

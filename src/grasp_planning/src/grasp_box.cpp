@@ -32,7 +32,7 @@ bool MPlanning(string planning_group, string reframe, Eigen::Affine3d target_pos
 int main(int argc, char **argv)
 {
     int pick_id = (argc > 1) ? atoi(argv[1]) : 1;
-    ros::init(argc, argv, "sda_pick");
+    ros::init(argc, argv, "grasp_box");
     ros::NodeHandle node_handle;
     // ros::AsyncSpinner spinner(4);
     // spinner.start();
@@ -60,6 +60,8 @@ int main(int argc, char **argv)
     planning_spec.ik_error_=1e-6;
 
     GraspMotion gm(PLANNING_GROUP,planning_spec);
+    Gripper gp;
+    gp.open();
     tf::TransformListener lr;
     tf::TransformBroadcaster br;
 
@@ -116,7 +118,9 @@ int main(int argc, char **argv)
     display_trajectory.trajectory.push_back(robot_trajectory);
     display_publisher.publish(display_trajectory);
     std::cout<<"Joint planning: execute ..."<<std::endl;
+
     gm.pm_->execute(robot_trajectory,false);
+    std::cout<<"Execution finished.";
     getchar();
     sleep_t.sleep();
 
@@ -141,7 +145,8 @@ int main(int argc, char **argv)
     std::cout<<"Cartesian planning: execute ..."<<std::endl;
     gm.pm_->execute(robot_trajectory,false);
     sleep_t.sleep();
-    getchar();
+    
+    gp.close();
 
     pose2.translate(Eigen::Vector3d(0,-0.1, 0));
     if(!gm.cartesianPlanning(pose2,robot_trajectory)){
@@ -151,6 +156,30 @@ int main(int argc, char **argv)
     }
     std::cout<<"Cartesian planning: execute ..."<<std::endl;
     gm.pm_->execute(robot_trajectory,false);
+    sleep_t.sleep();
+    sleep_t.sleep();
+    //start2
+
+    if(!gm.cartesianPlanning(pose1,robot_trajectory)){
+        std::cout<<"Cartesian planning failed."<<std::endl;
+        ros::shutdown();
+        return -1;
+    }
+    std::cout<<"Cartesian planning: execute ..."<<std::endl;
+    gm.pm_->execute(robot_trajectory,false);
+    sleep_t.sleep();
+    sleep_t.sleep();
+    
+    gp.open();
+
+    if(!gm.cartesianPlanning(pose2,robot_trajectory)){
+        std::cout<<"Cartesian planning failed."<<std::endl;
+        ros::shutdown();
+        return -1;
+    }
+    std::cout<<"Cartesian planning: execute ..."<<std::endl;
+    gm.pm_->execute(robot_trajectory,false);
+    sleep_t.sleep();
 
     std::cout<<"All completed."<<std::endl;
 
@@ -164,7 +193,7 @@ int main(int argc, char **argv)
     // lr.waitForTransform("/base_link", "/camera_link", ros::Time(0), ros::Duration(10.0));
     // lr.lookupTransform("/base_link", "/camera_link", ros::Time(0), transform_camera);
     // client_obj.call(srv_poses);
-    getchar();
+    //getchar();
     ros::shutdown();
     return 0;
 }

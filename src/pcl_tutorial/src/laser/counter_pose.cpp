@@ -8,7 +8,10 @@
 #include <ros/ros.h>
 #include <ros/rate.h>
 #include <sensor_msgs/LaserScan.h> 
+#include <geometry_msgs/PoseArray.h>
 #include <tf/transform_broadcaster.h>
+
+#include "obj_srv/obj_6d.h"
 
 #include "laser_line_extraction/LineSegment.h"
 #include "laser_line_extraction/LineSegmentList.h"
@@ -25,19 +28,24 @@ public:
     double line_max_;
     std::vector<double > line_pts_; //x1 y1 x2 y2
     tf::TransformBroadcaster broadcaster_;
+    geometry_msgs::Pose pose_;
+    bool found_;
 
     bool is_first_;
 
     ros::Subscriber sub_;
+    ros::ServiceServer service_;
 
     CounterPose(double max_radius,double line_min,double line_max,std::string topic="/line_segments")
     :max_radius_(max_radius),
      line_min_(line_min),
-     line_max_(line_max)
+     line_max_(line_max),
+     found_(false)
     {
         line_pts_.resize(4);
         pthread_mutex_init(&mutex_,NULL);
         sub_=nh_.subscribe(topic,100,&CounterPose::lineExtracCB,this);
+        service_=nh_.advertiseService("recognize_counter", &CounterPose::recognizeCounter,this);
 
     }
     ~CounterPose(){}
@@ -81,15 +89,33 @@ public:
                 tf::Transform(tf::Quaternion(q.x(),q.y(),q.z(),q.w()),tf::Vector3(center(0),center(1),center(2))),
                 ros::Time::now(),"laser","counter"));
             
+            pose_.position.x=center(0);
+            pose_.position.y=center(1);
+            pose_.position.z=center(2);
+            pose_.orientation.x=q.x();
+            pose_.orientation.y=q.y();
+            pose_.orientation.z=q.z();
+            pose_.orientation.w=q.w();
             break;
         }
-        
-
-
+        found_=found;
     }
 
     static double calLineLength(float x1,float y1,float x2,float y2){
         return (double)sqrt(pow(x1-x2,2)+pow(y1-y2,2));
+    }
+
+    bool recognizeCounter(obj_srv::obj_6d::Request &req,obj_srv::obj_6d::Response &res){
+        if(req.start){
+            geometry_msgs::PoseArray obj_array;
+            obj_array.poses.resize(0);
+            if(found_){
+                obj_array.poses.push_back(pose_);
+            }
+            res.obj_array = obj_array;
+
+        }
+        return true;
     }
 };
 

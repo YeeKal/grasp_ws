@@ -1,7 +1,7 @@
 #include "CommonInclude.h"
 #include "CalibrationTool.h"
 #include "ArucoPlane.h"
-#include "obj_srv/rgbd_image.h"
+#include "rgbd_srv/rgbd.h"
 
 using namespace std;
 using namespace cv;
@@ -29,9 +29,16 @@ Mat distCoeffs;
 
 int kbhit(void);
 int getch();
-void extractPlaneFeatureFromCloud(pcl::PointCloud<pcl::PointXYZRGBA>::Ptr& cloud_source,
-                                  pcl::PointCloud<pcl::PointXYZRGBA>::Ptr& cloud_destin);
+void concatImage(cv::Mat& img1, cv::Mat& img2, cv::Mat& des);
 
+bool pointsOutCube(Eigen::Matrix<float,4,1>& pt, float cubeSideLen)
+{
+    return (  (abs(pt[0]) > cubeSideLen/2)
+              || (abs(pt[1]) > cubeSideLen/2)
+              || (pt[2] > cubeSideLen)
+               || (pt[2] < 0.03f)
+            );
+}
 // ################################### main function ###########################################
 int main(int argc, char** argv)
 {
@@ -42,11 +49,11 @@ int main(int argc, char** argv)
 
     nh.param("useQrExtractor", useQrExtractor, false);
     nh.param("recordingTF", recordingTF, false);
-    nh.param("cameraIntrinsicInput", cameraIntrinsicInput, std::string("./camera_intrinsic_color.xml"));
+    nh.param("cameraIntrinsicInput", cameraIntrinsicInput, std::string("./camera_intrinsic_color_kinect.xml"));
     nh.param("numOfQRcodeOnSide", numOfQRcodeOnSide, 0);
     nh.param("EETF", EETFname, std::string("/ee_link"));
     nh.param("baseTF", baseTFname, std::string("/base_link"));
-    nh.param("RGBDserviceName",  RGBDserviceName,  std::string("realsense2_server"));
+    nh.param("RGBDserviceName",  RGBDserviceName,  std::string("kinect_server"));
     nh.param("dataOutputDir", dataOutputDir, std::string("./dataset") );
     nh.param("robotPoseOutput" , robotPoseOutput, std::string("./dataset/robot_pose.xml"));
 
@@ -73,9 +80,10 @@ int main(int argc, char** argv)
 
     Mat rgb_image, rgb_temp;
     Mat depth_image;
+    Mat perview;
     ros::NodeHandle nh2;
-    ros::ServiceClient client = nh2.serviceClient<obj_srv::rgbd_image> ( RGBDserviceName ); // bind client to server
-    obj_srv::rgbd_image srv;   // serivce type
+    ros::ServiceClient client = nh2.serviceClient<rgbd_srv::rgbd> ( RGBDserviceName ); // bind client to server
+    rgbd_srv::rgbd srv;   // serivce type
     srv.request.start = true;
     sensor_msgs::Image msg_rgb;
     sensor_msgs::Image msg_depth;
@@ -86,12 +94,15 @@ int main(int argc, char** argv)
     ros::Rate loop_rate ( 30 );
 
     pcl::visualization::PCLVisualizer viewer ( "3D viewer" );
+    viewer.addCoordinateSystem ( 0.1 );
+    viewer.setCameraPosition(-0.2,-0.2,-0.8, 0, 0, 0, 0, -1, 0);
     viewer.setBackgroundColor ( 40.0/255,40.0/255,52.0/255 );
 
     handeye::ArucoPlanePtr pArucoPlane;
 
     float cubeSide = 0;
     bool  validAruco = false;
+    bool  validArucoLast = false;
     int key = 0;
 
     if( useQrExtractor )
@@ -109,7 +120,7 @@ int main(int argc, char** argv)
     {
 
         if ( ! client.call( srv )) {  // client send request(call server), when success, return a bool true
-            cerr << "ERROR:  Client want to get new image from realsense2_server but FAILED !" << endl;
+            cerr << "ERROR:  Client want to get new image from "<<RGBDserviceName<<" but FAILED !" << endl;
             loop_rate.sleep();
             continue;
         }
@@ -161,26 +172,33 @@ int main(int argc, char** argv)
                 transform_inv = transform.inverse();
                 pArucoPlane->drawingAxis(rgb_temp);
                 pArucoPlane->drawingCube(rgb_temp);
+                if (!validArucoLast)
+                    cout <<"\e[1;35m" << "Valid Aruco Segmentation"<< "\e[0m" << endl;;
             } else {
-                cout << "WARNING:  No Aruco Plane been Viewed !" << endl;
+                if (validArucoLast)
+                    cout <<"\e[1;33m" << "No Aruco Found" << "\e[0m" << endl;
             }
+            validArucoLast = validAruco;
         }
 
         vector<pcl::PointXYZRGBA, Eigen::aligned_allocator<pcl::PointXYZRGBA>>().swap(cloud_scene->points);
         cloud_scene->clear();
-
-
-        imshow("color", rgb_temp);
-        imshow("depth", depth_image);
+        concatImage(rgb_temp, depth_image, perview);
+        imshow("perview", perview);
         waitKey(1);
 
-        
+        if(useQrExtractor && !validAruco) {
+            viewer.spinOnce();
+            continue;
+        }
+
+
         for (int r=0;r<depth_image.rows;r++)
         {
             for (int c=0;c<depth_image.cols;c++)
             {
-                depth_image.ptr<float> ( r ) [c] =depth_image.ptr<float> ( r ) [c] /1000.0;//YEE:;correct the meter unit
                 pcl::PointXYZRGBA p;
+                depth_image.ptr<float> ( r ) [c]=depth_image.ptr<float> ( r ) [c]/1000.0;
                 if ( ! ( depth_image.ptr<float> ( r ) [c] > 0 )
                      || depth_image.ptr<float> ( r ) [c] > 2.0 )
                 {
@@ -198,17 +216,11 @@ int main(int argc, char** argv)
 
                 if ( useQrExtractor && validAruco) {
                     Eigen::Vector4f scene_point;
-                    scene_point << scenePoint(0),scenePoint(1),scenePoint(2),1.0;
+                    scene_point << scenePoint(0),scenePoint(1),scenePoint(2),1;
                     Eigen::Matrix<float,4,1> world_point;
                     world_point = transform_inv * scene_point;
 
-                    if( (abs(world_point(0)) > cubeSide/2)  ||  // outside of cube bundary
-                            (abs(world_point(1)) > cubeSide/2) ||
-                            (world_point(2) > cubeSide) ||
-                            (world_point(2) < 0.05f))
-                    {
-                        continue;
-                    }
+                    if( pointsOutCube(world_point, cubeSide)) continue;
                 }
 
                 Eigen::Vector4f scene_point;
@@ -223,7 +235,7 @@ int main(int argc, char** argv)
                 p.g = rgb_image.ptr<uchar> ( r ) [c * 3 + 1];
                 p.r = rgb_image.ptr<uchar> ( r ) [c * 3 + 2];
                 cloud_scene->points.push_back ( p );
-                
+
             }
         }
 
@@ -241,10 +253,8 @@ int main(int argc, char** argv)
 
         viewer.removeAllPointClouds();
         viewer.addPointCloud ( cloud_scene, "cloud_scene" );
-        viewer.addCoordinateSystem ( 1.0 );
         viewer.spinOnce();
 
-        extractPlaneFeatureFromCloud(cloud_scene, cloud_scene);
 
         if( kbhit())   //space down
         {
@@ -253,11 +263,11 @@ int main(int argc, char** argv)
             {
                 cout<<"\n Finishing grab data ..."<<endl;
                 viewer.close();
-                
+
                 ros::shutdown();
                 break;
             } else if (c == KEYCODE_s || c == KEYCODE_S ) {
-                
+
                 cout<<"...... saving data ...... #" << fileSavedCounter << endl;
                 cloud_scene->height = 1;
                 cloud_scene->width  = cloud_scene->points.size();
@@ -277,15 +287,39 @@ int main(int argc, char** argv)
 
         loop_rate.sleep();
         // ros::spinOnce();
-        
+
     }
 
     return 0;
 
 }
 
+void concatImage(cv::Mat& clr, cv::Mat& dep32f, cv::Mat& des) {
+    int height = clr.rows;
+    int width = clr.cols;
+    Mat gray = Mat(dep32f.rows, dep32f.cols, CV_8UC1);
+    float max = 2.0;
+    float min = 0.5;
+    for (int r=0;r<dep32f.rows;r++)
+    {
+        for (int c=0;c<dep32f.cols;c++)
+        {
+            float d = dep32f.ptr<float> ( r ) [c];
+            if (d<max && d>min) {//max,min表示需要的深度值的最大/小值
+                gray.ptr<uchar>(r)[c] = (max - d) / (max - min) * 255.0f;
+            }else{
+                gray.ptr<uchar>(r)[c] = 0;
+            }
 
-//##############################################################################################
+        }
+    }
+    applyColorMap(gray, gray, COLORMAP_JET);
+    des.create(height, width * 2, clr.type());
+    Mat r1 = des(Rect(0, 0, width, height));
+    clr.copyTo(r1);
+    Mat r2 = des(Rect(width, 0, width, height));
+    gray.copyTo(r2);
+}
 
 
 /**
@@ -293,33 +327,6 @@ int main(int argc, char** argv)
  * @param cloud_source
  * @param cloud_destin
  */
-
-void extractPlaneFeatureFromCloud(pcl::PointCloud<pcl::PointXYZRGBA>::Ptr& cloud_source,
-                                  pcl::PointCloud<pcl::PointXYZRGBA>::Ptr& cloud_destin)
-{
-    // creat the filtering object
-    pcl::ModelCoefficients::Ptr coefficient(new pcl::ModelCoefficients());
-    // creat the inliers indices object
-    pcl::PointIndices::Ptr inliers(new pcl::PointIndices());
-    // create the segmentation object
-    pcl::SACSegmentation<pcl::PointXYZRGBA> seg;
-    // create the extract object
-    pcl::ExtractIndices<pcl::PointXYZRGBA> extract;
-
-    seg.setOptimizeCoefficients(true);
-    seg.setModelType(pcl::SACMODEL_PLANE);
-    seg.setMethodType(pcl::SAC_RANSAC);
-    seg.setMaxIterations(1000);
-    seg.setDistanceThreshold(0.01);
-
-    seg.setInputCloud(cloud_source);
-    seg.segment(*inliers, *coefficient);
-
-    extract.setInputCloud(cloud_source);
-    extract.setIndices(inliers);
-    extract.setNegative(true);
-    extract.filter(*cloud_destin);
-}
 
 int getch() {
     static struct termios oldt, newt;

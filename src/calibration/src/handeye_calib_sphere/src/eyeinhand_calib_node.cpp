@@ -15,7 +15,6 @@ double sphereModelRadius;
 
 typedef pcl::PointXYZRGBA PointT;
 typedef pcl::PointCloud<PointT> PointCloud;
-void pairAlign (const PointCloud::Ptr cloud_src, const PointCloud::Ptr cloud_tgt,  Eigen::Matrix4f &final_transform, bool downsample = false);
 
 class ReprojectionError3D {
 public:
@@ -202,6 +201,7 @@ int main(int argc, char** argv )
         Eigen::VectorXf sphereModel;
         ransac.getModelCoefficients(sphereModel);
         float r = sphereModel(3);
+        std::cout<<"radius:"<<r<<std::endl;
 
         if(r >= radius + 0.005 || r <= radius - 0.005) {
             badCloudids.push_back(i);
@@ -318,81 +318,4 @@ int main(int argc, char** argv )
     cout << "Writing tf data in format: (x y z qx qy qz qw) to " << handeyeResultFile << endl;
 
     return 0;
-}
-
-
-void pairAlign (const PointCloud::Ptr cloud_src, const PointCloud::Ptr cloud_tgt,  Eigen::Matrix4f &final_transform, bool downsample)
-{
-    //
-    // Downsample for consistency and speed
-    // \note enable this for large datasets
-    PointCloud::Ptr src (new PointCloud);
-    PointCloud::Ptr tgt (new PointCloud);
-    pcl::VoxelGrid<PointT> grid;
-    if (downsample)
-    {
-        grid.setLeafSize (0.05, 0.05, 0.05);
-        grid.setInputCloud (cloud_src);
-        grid.filter (*src);
-
-        grid.setInputCloud (cloud_tgt);
-        grid.filter (*tgt);
-    }
-    else
-    {
-        src = cloud_src;
-        tgt = cloud_tgt;
-    }
-
-    //
-    // Align
-    pcl::IterativeClosestPoint<PointT, PointT> reg;
-    reg.setTransformationEpsilon (1e-9);
-    // Set the maximum distance between two correspondences (src<->tgt) to 10cm
-    // Note: adjust this based on the size of your datasets
-    reg.setMaxCorrespondenceDistance (1.5f);
-    // Set the point representation
-
-    reg.setInputSource (src);
-    reg.setInputTarget (tgt);
-
-    //
-    // Run the same optimization in a loop and visualize the results
-    Eigen::Matrix4f Ti = Eigen::Matrix4f::Identity (), prev;
-    PointCloud::Ptr reg_result = src;
-    reg.setMaximumIterations (10);
-
-    for (int i = 0; i < 30; ++i)
-    {
-        //        PCL_INFO ("Iteration Nr. %d.\n", i);
-
-        // save cloud for visualization purpose
-        src = reg_result;
-
-        // Estimate
-        reg.setInputSource (src);
-        reg.align (*reg_result);
-
-        //accumulate transformation between each Iteration
-        Ti = reg.getFinalTransformation () * Ti;
-
-        //if the difference between this transformation and the previous one
-        //is smaller than the threshold, refine the process by reducing
-        //the maximal correspondence distance
-        if (fabs ((reg.getLastIncrementalTransformation () - prev).sum ()) < reg.getTransformationEpsilon ())
-            reg.setMaxCorrespondenceDistance (reg.getMaxCorrespondenceDistance () - 0.2);
-
-        prev = reg.getLastIncrementalTransformation ();
-        //        PCL_INFO ("Iteration Nr. %d. finished\n", i);
-
-
-    }
-
-    //
-    // Get the transformation from target to source
-    Eigen::Matrix4f targetToSource = Ti.inverse();
-    //    cout << "target To Source: \n" << targetToSource.matrix() << "\n\n";
-
-    final_transform = targetToSource;
-
 }
