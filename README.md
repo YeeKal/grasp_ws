@@ -47,6 +47,14 @@ sda: 192.168.1.10
 hokuyo: 192.168.1.11
 pc-sda: 192.168.1.87
 
+#### tf
+
+The sensor link is published by  `static_transform_publisher` in `motoman_sda5f_moveit_config/launch/motoman_sda5f_moveit_sensor_manager.launch`
+
+sensor list:
+    - asus camera: 0.00662214  0.0339903 -0.0687947  0.919409 -0.392716 0.0021969 0.0213767 /arm_left_link_7_t /camera_rgb_optical_frame 100
+    - hokuyo laser: 0.43 -0.15 0.68 0 0 0 1 /world /laser 100
+
 #### model size
 
 right gripper: 
@@ -63,17 +71,6 @@ right gripper:
 ('K = ', [536.3783314976719, 0.0, 325.59688771858265, 0.0, 539.4028276436596, 240.028337450314, 0.0, 0.0, 1.0])
 ('R = ', [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0])
 ('P = ', [541.3510131835938, 0.0, 323.52929686348944, 0.0, 0.0, 542.7696533203125, 236.24413879678468, 0.0, 0.0, 0.0, 1.0, 0.0])
-
-
-# asus
-
-('D = ', [0.04869817149535155, -0.13796301358544696, 0.0074649186063052595, 0.003718692021264184, 0.0])
-('K = ', [537.3745458137307, 0.0, 325.28760172950103, 0.0, 534.8118748679537, 249.0282301349994, 0.0, 0.0, 1.0])
-('R = ', [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0])
-('P = ', [537.691162109375, 0.0, 327.7376611684158, 0.0, 0.0, 537.2880859375, 251.69179250104935, 0.0, 0.0, 0.0, 1.0, 0.0])
-
-
-
 ```
 
 ## dependecies
@@ -83,12 +80,14 @@ right gripper:
 - [ork_ws]()
 - motoman sda5f driver
 - [calibration](https://github.com/lixiny/Handeye-Calibration-ROS)
+- [laser_line_extration](https://github.com/kam3k/laser_line_extraction)
 
 #### ros package extral
 
 - [yeebot_core](https://github.com/YeeKal/yeebot)
 - openni2 driver
 - realsense driver
+- hokuyo driver: urg-node
 
 #### system package
 

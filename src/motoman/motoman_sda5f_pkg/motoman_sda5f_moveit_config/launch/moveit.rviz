@@ -498,27 +498,128 @@ Visualization Manager:
       Value: true
       Visual Enabled: true
     - Class: rviz/TF
-      Enabled: false
+      Enabled: true
       Frame Timeout: 100
       Frames:
         All Enabled: false
+        arm_left_link_1_s:
+          Value: false
+        arm_left_link_2_l:
+          Value: false
+        arm_left_link_3_e:
+          Value: false
+        arm_left_link_4_u:
+          Value: false
+        arm_left_link_5_r:
+          Value: false
+        arm_left_link_6_b:
+          Value: false
+        arm_left_link_7_t:
+          Value: false
+        arm_left_link_gripper:
+          Value: false
+        arm_left_link_tool0:
+          Value: false
+        arm_right_link_1_s:
+          Value: false
+        arm_right_link_2_l:
+          Value: false
+        arm_right_link_3_e:
+          Value: false
+        arm_right_link_4_u:
+          Value: false
+        arm_right_link_5_r:
+          Value: false
+        arm_right_link_6_b:
+          Value: false
+        arm_right_link_7_t:
+          Value: false
+        arm_right_link_gripper:
+          Value: false
+        arm_right_link_tool0:
+          Value: false
+        base:
+          Value: false
+        base_link:
+          Value: false
+        camera_rgb_optical_frame:
+          Value: true
+        counter:
+          Value: true
+        head_link:
+          Value: false
+        kinect2_rgb_optical_frame:
+          Value: false
+        laser:
+          Value: true
+        torso_link_b1:
+          Value: false
+        torso_link_b2:
+          Value: false
+        world:
+          Value: false
       Marker Scale: 0.800000012
       Name: TF
       Show Arrows: false
       Show Axes: true
       Show Names: false
       Tree:
-        {}
+        world:
+          base:
+            base_link:
+              kinect2_rgb_optical_frame:
+                {}
+              torso_link_b1:
+                arm_left_link_1_s:
+                  arm_left_link_2_l:
+                    arm_left_link_3_e:
+                      arm_left_link_4_u:
+                        arm_left_link_5_r:
+                          arm_left_link_6_b:
+                            arm_left_link_7_t:
+                              arm_left_link_tool0:
+                                arm_left_link_gripper:
+                                  {}
+                              camera_rgb_optical_frame:
+                                {}
+                arm_right_link_1_s:
+                  arm_right_link_2_l:
+                    arm_right_link_3_e:
+                      arm_right_link_4_u:
+                        arm_right_link_5_r:
+                          arm_right_link_6_b:
+                            arm_right_link_7_t:
+                              arm_right_link_tool0:
+                                arm_right_link_gripper:
+                                  {}
+                head_link:
+                  {}
+              torso_link_b2:
+                {}
+          laser:
+            counter:
+              {}
       Update Interval: 0
-      Value: false
+      Value: true
     - Class: rviz/MarkerArray
       Enabled: true
       Marker Topic: rviz_visual_tools
       Name: MarkerArray
       Namespaces:
-        {}
+        Text: true
+        pose1: true
+        pose2: true
+        pose3: true
       Queue Size: 100
       Value: true
+    - Class: rviz/Marker
+      Enabled: false
+      Marker Topic: /line_markers
+      Name: Marker
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: false
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -535,25 +636,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 2.27348256
+      Distance: 2.33406973
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.62911135
-        Y: -0.511128783
+        X: 0.748145044
+        Y: -0.348631263
         Z: -9.4797997e-07
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.0500000007
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.589792192
+      Pitch: 0.679792225
       Target Frame: base_link
       Value: XYOrbit (rviz)
-      Yaw: 1.24312794
+      Yaw: 1.56312752
     Saved: ~
 Window Geometry:
   Displays:
@@ -573,5 +674,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1855
-  X: 2050
+  X: 65
   Y: 44
