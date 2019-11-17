@@ -20,6 +20,8 @@ public:
   ~LineExtraction();
   // Run
   void extractLines(std::vector<Line>&);
+  void extractLines2(std::vector<Line>& lines,const std::vector<unsigned int> &indices);
+
   // Data setting
   void setCachedData(const std::vector<double>&, const std::vector<double>&,
                      const std::vector<double>&, const std::vector<unsigned int>&);

@@ -28,7 +28,10 @@ void LineExtraction::extractLines(std::vector<Line>& lines)
 
   // Filter indices
   filterClosePoints();
+
   filterOutlierPoints();
+  
+
 
   // Return no lines if not enough points left
   if (filtered_indices_.size() <= std::max(params_.min_line_points, static_cast<unsigned int>(3)))
@@ -38,7 +41,54 @@ void LineExtraction::extractLines(std::vector<Line>& lines)
 
   // Split indices into lines and filter out short and sparse lines
   split(filtered_indices_);
+
   filterLines();
+  
+
+
+  // Fit each line using least squares and merge colinear lines
+  for (std::vector<Line>::iterator it = lines_.begin(); it != lines_.end(); ++it)
+  {
+    it->leastSqFit();
+  }
+  
+  // If there is more than one line, check if lines should be merged based on the merging criteria
+  if (lines_.size() > 1)
+  {
+    mergeLines();
+  }
+
+  lines = lines_;
+}
+
+// add by yee
+// this laser data mey be preprocessed by other programmer
+//  and the indices changed
+void LineExtraction::extractLines2(std::vector<Line>& lines,const std::vector<unsigned int> &indices) 
+{
+  // Resets
+  filtered_indices_ = indices;
+  lines_.clear();
+
+  // Filter indices
+  filterClosePoints();
+
+  filterOutlierPoints();
+  
+
+
+  // Return no lines if not enough points left
+  if (filtered_indices_.size() <= std::max(params_.min_line_points, static_cast<unsigned int>(3)))
+  {
+    return;
+  }
+
+  // Split indices into lines and filter out short and sparse lines
+  split(filtered_indices_);
+
+  filterLines();
+  
+
 
   // Fit each line using least squares and merge colinear lines
   for (std::vector<Line>::iterator it = lines_.begin(); it != lines_.end(); ++it)
@@ -299,7 +349,6 @@ void LineExtraction::split(const std::vector<unsigned int>& indices)
   {
     return;
   }
-
   Line line(c_data_, r_data_, params_, indices);
   line.endpointFit();
   double dist_max = 0;

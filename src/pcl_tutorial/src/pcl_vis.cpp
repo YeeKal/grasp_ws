@@ -59,7 +59,7 @@ int main (int argc, char** argv)
         return 0;
     }
 
-    std::cout<<"height:"<<cloud->height<<" width:"<<cloud->height<<endl;
+    std::cout<<"height:"<<cloud->height<<" width:"<<cloud->width<<endl;
     std::cout<<"points:"<<cloud->points.size()<<std::endl;
     
     //view point cloud

@@ -2,6 +2,7 @@ The box grasping workspace for master thesis.
 
 Content:
 - [dependecies](#dependecies)
+- [hardware](#hardware)
 
 #### help command
 
@@ -19,26 +20,44 @@ rosrun pcl_tutorial save_depth_with_mask /camera/color/image_raw /camera/depth/i
 rosrun pcl_tutorial main reso/box_small/thin.pcd -o 0.7 -d 0.01 -t 1000 -n 100 -it 100
 
 # laser line
+roslaunch pcl_tutorial filter_laser.launch
+
 roslaunch laser_line_extraction example.launch
 rosrun pcl_tutorial counter_pose 2.0 0.65,0.75
 # tf
 rosrun tf static_transform_publisher  0.00662214  0.0339903 -0.0687947  0.919409 -0.392716 0.0021969 0.0213767 arm_left_link_7_t camera_rgb_optical_frame 100
 
-hokuyo: 40hz
-
-'''
-sda
-'''
-## driver
+## sda driver
 roslaunch motoman_sda5f_support robot_interface_streaming_sda5f.launch 
 roslaunch motoman_sda5f_moveit_config demo_real.launch 
 
 ```
 
+#### technique
+
+1. laser detection
+    - laser points differ
+    - low-pass filter
+    - line detection
+2. camera recognition
+    - hsv segmentation
+    - 6D pose estimation: ICP+ Super4PCS
+3. motion planning
+
+
+
+## hardware
+
+#### sda
+
 initial states:
 
     [arm_left_joint_1_s, arm_left_joint_2_l, arm_left_joint_3_e, arm_left_joint_4_u, arm_left_joint_5_r,arm_left_joint_6_b, arm_left_joint_7_t]
     position: [2.6937308311462402, -1.7499834299087524, -1.922503113746643, 0.04039989039301872, 0.8331186175346375, -1.1421606540679932, 1.8852884769439697]
+
+#### laser
+
+hokuyo: 40hz
 
 #### ip
 

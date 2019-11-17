@@ -5,6 +5,7 @@
 #include <Eigen/Core>
 #include <Eigen/Dense>
 #include <string>
+#include <boost/array.hpp>
 #include <pthread.h>
 #include <ros/ros.h>
 #include <ros/rate.h>
@@ -28,6 +29,9 @@
 #define PI 3.1415926
 #define COUNTER_WIDTH 0.31
 #define COUNTER_RADIUS 0.4
+#define NZEROS 4
+#define NPOLES 4
+#define GAIN   2.072820954e+02
 typedef pcl::PointXYZ PointT;
 
 class FilterLaser{
@@ -36,7 +40,8 @@ public:
     ros::Subscriber sub_scan_;      // subscriber to get laser data
     ros::Publisher pub_scan_;       // publisher for the laser data after processed
     ros::Publisher pub_line_;       // publisher for the detected line
-    ros::Publisher pub_marker_;     // publisher for the markers in represent of lines
+    ros::Publisher pub_line_marker_;     // publisher for the markers in represent of lines
+    ros::Publisher pub_people_marker_;     // publisher for the markers in represent of lines
     ros::ServiceServer service_;    // service to give the counter pose
     tf::TransformBroadcaster broadcaster_;  // to publish the static transform between counter with laser
     geometry_msgs::Pose pose_;              // the counter pose
@@ -49,6 +54,7 @@ public:
     bool is_first_;             // is the first frame of the topic
     bool pub_markers_;          // whether to publish line markers
     bool foud_counter_pose_;    // whether the counter pose is derivated
+    bool found_people_;
     double angle_min_;          // min angle of laser
     double angle_max_;          // max angle of laser
     double line_min_;           // the detected line length should be during (line_min, line_max_)
@@ -66,8 +72,11 @@ public:
     std::vector<line_extraction::Line> lines_;
     std::vector<unsigned int> filtered_indices_;    // Indices after filtering
     std::vector<double> range_data_;                // laser data
+    std::vector<double> range_cur_;                // laser data
+
 
     visualization_msgs::Marker marker_people_;
+    sensor_msgs::LaserScan data_cur_;
 
     bool init_source_;
 
@@ -80,31 +89,37 @@ public:
         source_file_(source_file),
         is_first_(true),
         foud_counter_pose_(false),
+        found_people_(false),
         init_source_(init_source),
         max_radius_(2.0),
         line_min_(0.65),
         line_max_(0.75)
     {
-        std::cout<<"Load source file ...\n";
-        if(pcl::io::loadPCDFile<PointT>(source_file_,*source_)==-1){
-            std::cout<<"Could not read source file:"<<source_file_<<std::endl;
-            exit(1);
+        
+        if(!init_source_){
+            std::cout<<"Load source file ...\n";
+            if(pcl::io::loadPCDFile<PointT>(source_file_,*source_)==-1){
+                std::cout<<"Could not read source file:"<<source_file_<<std::endl;
+                exit(1);
+            }
+            kdtree_.setInputCloud(source_);
         }
-        kdtree_.setInputCloud(source_);
 
 
         loadParameters();
         sub_scan_=nh_.subscribe(scan_topic_,100,&FilterLaser::laserCB,this);
         pub_scan_=nh_.advertise<sensor_msgs::LaserScan>("scan2",100);
-        pub_line_ = nh_.advertise<laser_line_extraction::LineSegmentList>("line_segments", 1);
+        pub_line_ = nh_.advertise<laser_line_extraction::LineSegmentList>("line_segments", 10);
         if (pub_markers_){
-            pub_marker_ = nh_.advertise<visualization_msgs::Marker>("line_markers", 1);
+            pub_line_marker_ = nh_.advertise<visualization_msgs::Marker>("line_markers", 10);
+            pub_people_marker_=nh_.advertise<visualization_msgs::Marker>("people_markers", 10);
         }
         service_=nh_.advertiseService("recognize_counter", &FilterLaser::recognizeCounter,this);
     }
 
     void laserCB(const sensor_msgs::LaserScan::ConstPtr& msg){
         if(is_first_){
+            std::cout<<"is first\n";
             angle_min_=msg->angle_min;
             angle_max_=msg->angle_max;
             angle_increment_=msg->angle_increment;
@@ -113,56 +128,95 @@ public:
                 std::cout<<"Invalid laser data.\n";
                 exit(1);
             }
-            is_first_=false;
             if(init_source_){
-                is_first_=true;
                 laser2PCloud(msg);
                 pcl::io::savePCDFile(source_file_, *cloud_);
+                std::cout<<"Saved source file"<<std::endl;
                 ros::shutdown();
                 exit(0);
             }
             cacheData(msg);
+
+            data_cur_.angle_min=angle_min_;
+            data_cur_.angle_max=angle_max_;
+            data_cur_.angle_increment=msg->angle_increment;
+            data_cur_.time_increment=msg->time_increment;
+            data_cur_.header.frame_id="laser";
+            data_cur_.scan_time=msg->scan_time;
+            data_cur_.range_min=msg->range_min;
+            data_cur_.range_max=msg->range_max;
+
+            is_first_=false;
         }
 
         range_data_.assign(msg->ranges.begin(), msg->ranges.end());
-        line_extraction_.setRangeData(range_data_);
+        
+
+        //data_cur_=*msg;
+        data_cur_.ranges=msg->ranges;
+        data_cur_.intensities=msg->intensities;
+        data_cur_.header.stamp=ros::Time();
     }
     
     void runOnce(){
         /* filter by source point cloud */
+        if(is_first_) return;
+        range_cur_.assign(range_data_.begin(), range_data_.end());
         PointT sp;
         std::vector<int> vec_ids(1);
         std::vector<float> vec_dis(1);
         double angle=angle_min_;
         std::vector<unsigned int> output;
         for(int i=0;i<range_size_;i++){
-            angle +=angle_increment_*i;
-            sp.x=range_data_[i]*cos(angle);
-            sp.y=range_data_[i]*sin(angle);
+            angle +=angle_increment_;
+
+            // point distance less than max_radius+1.0
+            if(range_cur_[i]>max_radius_+1.0 || range_cur_[i]<0.1){
+                data_cur_.ranges[i]=0;
+                data_cur_.intensities[i]=0;
+                continue;
+            }
+            sp.x=range_cur_[i]*cos(angle);
+            sp.y=range_cur_[i]*sin(angle);
             sp.z=0;
             if ( kdtree_.nearestKSearch (sp, 1, vec_ids, vec_dis) > 0 ){
-                if(vec_dis[0]>filter_distance_){
+                if(vec_dis[0]>filter_distance_-0.01){
                     output.push_back(i);
+                    continue;
                 }
+                data_cur_.ranges[i]=0;
+                data_cur_.intensities[i]=0;
             }
+            
         }
         filtered_indices_=output;
-
+        //printVector(filtered_indices_,"1st filter");
+        line_extraction_.setRangeData(range_cur_);
 
         /* find lines */
-        // change indices in line extraction
-        line_extraction_.c_data_.indices=filtered_indices_;
         // filter by line_extraction and find lines
-        line_extraction_.extractLines(lines_);
+        // I have to write another function extracLines2 to pass filtered_indices_
+        //line_extraction_.c_data_.indices.assign(filtered_indices_.begin(),filtered_indices_.end());
+        line_extraction_.extractLines2(lines_,filtered_indices_);
         // get back the indices filter by line_extraction
         filtered_indices_=line_extraction_.filtered_indices_; 
+        //printVector(filtered_indices_,"2nd filter");
 
 
         detectCounterPose();
-
         detectSomethingElse();
-
         notifyAll(); //TODO: new thread
+        //std::cout<<"hahad\n";
+
+    }
+    void printVector(std::vector<unsigned int> a, std::string name){
+        std::cout<<name<<" with "<<a.size()<<" points."<<std::endl;
+        std::cout<<"data:";
+        for(int i=0;i<a.size();i++){
+            if(i%30==0) std::cout<<std::endl;
+            std::cout<<a[i]<<" ";
+        }
+        std::cout<<std::endl;
     }
 
     void detectSomethingElse(){
@@ -172,63 +226,81 @@ public:
         double angle=angle_min_;
         int outliers=0;
         for(int i=0;i<filtered_indices_.size();i++){
-            angle +=angle_increment_*filtered_indices_[i];
-            x=range_data_[filtered_indices_[i]]*cos(angle);
-            y=range_data_[filtered_indices_[i]]*sin(angle);
+            angle =angle_min_+angle_increment_*filtered_indices_[i];
+            x=range_cur_[filtered_indices_[i]]*cos(angle);
+            y=range_cur_[filtered_indices_[i]]*sin(angle);
+            //std::cout<<i<<":"<<filtered_indices_[i]<<" "<<"x:"<<x<<"  y:"<<y<<std::endl;
             // less than max_radius_ and not in the counter
-            if(calLineLength(x,y,pose_.position.x,pose_.position.y)>COUNTER_RADIUS && calLineLength(x,y,0,0) <max_radius_ ){
-                output.push_back(filtered_indices_[i]);
-                outliers++;
-                cx=cx*(outliers-1)/(double)outliers+x/(double)outliers;
-                cy=cy*(outliers-1)/(double)outliers+y/(double)outliers;
+            if(foud_counter_pose_){
+                if(calLineLength(x,y,pose_.position.x,pose_.position.y)>COUNTER_RADIUS && calLineLength(x,y,0,0) <max_radius_+1.0 ){
+                    output.push_back(filtered_indices_[i]);
+                    outliers++;
+                    cx=cx*(outliers-1)/(double)outliers+x/(double)outliers;
+                    cy=cy*(outliers-1)/(double)outliers+y/(double)outliers;
+                }
+                //only counter exists,  people matters
+            // else{
+            //     if(calLineLength(x,y,0,0) <max_radius_ +1.0){
+            //         output.push_back(filtered_indices_[i]);
+            //         outliers++;
+            //         cx=cx*(outliers-1)/(double)outliers+x/(double)outliers;
+            //         cy=cy*(outliers-1)/(double)outliers+y/(double)outliers;
+            //     }
             }
         }
-
-        markerMsgElse(cx,cy,0.2,marker_people_);
+        if(output.size()>20){
+            found_people_=true;
+        }else{
+            found_people_=false;
+        }
+        //std::cout<<"cx:"<<cx<<"  cy:"<<cy<<std::endl;
+        markerMsgElse(cx,cy,0.4,marker_people_);
         //debug
-        std::cout<<"the remain points size:"<<output.size()<<std::endl;
+        //std::cout<<"the remain points size:"<<output.size()<<std::endl;
 
     }
     void markerMsgElse(double cx,double cy,double radius, visualization_msgs::Marker& marker_msg){
         marker_msg.ns = "people";
         marker_msg.id = 1;
-        marker_msg.type = visualization_msgs::Marker::CUBE;
-        marker_msg.scale.x = 0.01;
-        marker_msg.scale.y = 0.01;
-        marker_msg.scale.z = 0.01;
+        marker_msg.type = visualization_msgs::Marker::CUBE_LIST;
+        marker_msg.scale.x = 0.05;
+        marker_msg.scale.y = 0.05;
+        marker_msg.scale.z = 0.05;
 
         marker_msg.color.r = 1.0;
         marker_msg.color.g = 0.8;
         marker_msg.color.b = 0.2;
-        marker_msg.color.a = 0.2;
+        marker_msg.color.a = 1.0;
         int num=20;
-         marker_msg.points.clear();
-        for (int i=0;i<num;i++)
-        {
-            geometry_msgs::Point p;
-            p.x = cx+radius*cos(i*2*PI/num);
-            p.y = cy+radius*sin(i*2*PI/num);
-            p.z = 0;
-            marker_msg.points.push_back(p);
+        marker_msg.points.clear();
+        if(found_people_){
+            for (int i=0;i<num;i++)
+            {
+                geometry_msgs::Point p;
+                p.x = cx+radius*cos(i*2*PI/num);
+                p.y = cy+radius*sin(i*2*PI/num);
+                p.z = 0;
+                marker_msg.points.push_back(p);
+            }
         }
         marker_msg.header.frame_id = frame_id_;
         marker_msg.header.stamp = ros::Time::now();
     }
 
     void notifyAll(){
-
         // publish line
         laser_line_extraction::LineSegmentList line_msg;
         populateLineSegListMsg(lines_, line_msg);
         pub_line_.publish(line_msg);
+        pub_scan_.publish(data_cur_);
 
         // Also publish markers if parameter publish_markers is set to true
         if (pub_markers_)
         {
             visualization_msgs::Marker marker_msg;
             populateMarkerMsg(lines_, marker_msg);
-            pub_marker_.publish(marker_msg);
-            pub_marker_.publish(marker_people_);
+            pub_line_marker_.publish(marker_msg);
+            pub_people_marker_.publish(marker_people_);
         }
     }
 
@@ -240,25 +312,30 @@ public:
         for (std::vector<line_extraction::Line>::const_iterator cit = lines_.begin(); cit != lines_.end(); ++cit){
             angle=cit->getAngle();
             radius=cit->getRadius();
+            //std::vector<double> start(2),end(2);
+            boost::array<double, 2> start;
+            boost::array<double, 2> end;
+            start=cit->getStart();
+            end=cit->getEnd();
 
             if(angle>PI/2 || angle<-PI/2) continue;
             if(radius>max_radius_) continue;
             line_length=calLineLength(
-                             cit->getStart()[0],
-                             cit->getStart()[1],
-                             cit->getEnd()[0],
-                             cit->getEnd()[1]
+                             start[0],
+                             start[1],
+                             end[0],
+                             end[1]
                             ); 
+            //std::cout<<"line length:"<<line_length<<std::endl;            
             if(line_length>line_max_ || line_length<line_min_) continue;
             // not greedy mode, one is enough
             // for debug
-            //std::cout<<"line length:"<<line_length<<std::endl;
             found =true;
 
             Eigen::Quaterniond q;
             q=Eigen::AngleAxisd(angle,Eigen::Vector3d::UnitZ());
-            pose_.position.x=(cit->getStart()[0]+cit->getEnd()[0]+COUNTER_WIDTH*cos(angle))/2;
-            pose_.position.y=(cit->getStart()[1]+cit->getEnd()[1]+COUNTER_WIDTH*sin(angle))/2;
+            pose_.position.x=filterLowX((start[0]+end[0]+COUNTER_WIDTH*cos(angle))/2);
+            pose_.position.y=filterLowY((start[1]+end[1]+COUNTER_WIDTH*sin(angle))/2);
             pose_.position.z=0;
             pose_.orientation.x=q.x();
             pose_.orientation.y=q.y();
@@ -277,6 +354,31 @@ public:
         foud_counter_pose_=found;
 
     }
+
+    double filterLowX(double input){
+        
+
+        static float xv[NZEROS+1], yv[NPOLES+1];
+        xv[0] = xv[1]; xv[1] = xv[2]; xv[2] = xv[3]; xv[3] = xv[4]; 
+        xv[4] = input / GAIN;
+        yv[0] = yv[1]; yv[1] = yv[2]; yv[2] = yv[3]; yv[3] = yv[4]; 
+        yv[4] =   (xv[0] + xv[4]) + 4 * (xv[1] + xv[3]) + 6 * xv[2]
+                    + ( -0.1873794924 * yv[0]) + (  1.0546654059 * yv[1])
+                    + (  -2.3139884144 * yv[2]) + (  2.3695130072 * yv[3]);
+        return yv[4];
+    }
+    double filterLowY(double input){
+
+        static float xvy[NZEROS+1], yvy[NPOLES+1];
+        xvy[0] = xvy[1]; xvy[1] = xvy[2]; xvy[2] = xvy[3]; xvy[3] = xvy[4]; 
+        xvy[4] = input / GAIN;
+        yvy[0] = yvy[1]; yvy[1] = yvy[2]; yvy[2] = yvy[3]; yvy[3] = yvy[4]; 
+        yvy[4] =   (xvy[0] + xvy[4]) + 4 * (xvy[1] + xvy[3]) + 6 * xvy[2]
+                    + ( -0.1873794924 * yvy[0]) + (  1.0546654059 * yvy[1])
+                    + ( -2.3139884144 * yvy[2]) + (  02.3695130072 * yvy[3]);
+        return yvy[4];
+    }
+
     bool recognizeCounter(obj_srv::obj_6d::Request &req,obj_srv::obj_6d::Response &res){
         
 
@@ -284,9 +386,10 @@ public:
         if(req.start){
             geometry_msgs::PoseArray obj_array;
             obj_array.poses.resize(0);
-            if(foud_counter_pose_){
-                obj_array.poses.push_back(pose_);
-            }
+            // if(foud_counter_pose_){
+            //     obj_array.poses.push_back(pose_);
+            // }
+            obj_array.poses.push_back(pose_);
             res.obj_array = obj_array;
 
         }
@@ -301,13 +404,18 @@ public:
     [x,y,z]=[ r * cos theta,  r * sin theta , 0]
     */
     void laser2PCloud(const sensor_msgs::LaserScan::ConstPtr& msg){
+        std::cout<<" to cloud start\n";
         double angle=angle_min_;
+        cloud_->width=range_size_;
+        cloud_->height=1;
+        cloud_->points.resize(cloud_->width*cloud_->height);
         for(int i=0;i<range_size_;i++){
-            angle +=angle_increment_*i;
+            angle +=angle_increment_;
             cloud_->points[i].x = msg->ranges[i]*cos(angle);
             cloud_->points[i].y = msg->ranges[i]*sin(angle);
             cloud_->points[i].z = 0;
         }
+        std::cout<<" to cloud end\n";
     }
 
     // Members
@@ -321,7 +429,7 @@ public:
 
 
 int main(int argc,char ** argv){
-    ros::init(argc, argv, "read_laser");
+    ros::init(argc, argv, "filter_laser");
     ros::NodeHandle nh;
     double angle_min=-3.14;
     double angle_max=3.14;
@@ -330,21 +438,30 @@ int main(int argc,char ** argv){
     nh.param<std::string>("source_file", source_file, "source.pcd");
     nh.param<bool>("init_source", init_source, false);
 
-    ros::Rate rate(20);
+    double frequency;
+    nh.param<double>("frequency", frequency, 20);
+    ROS_DEBUG("Frequency set to %0.1f Hz", frequency);
+    ros::Rate rate(frequency);
 
     FilterLaser FilterLaser(source_file,init_source);
 
+
+    // init source file
     if(init_source){
-        rate.sleep();
-        ros::spinOnce();
+        std::cout<<"Start init source."<<std::endl;
+        while(ros::ok()){
+            rate.sleep();
+            ros::spinOnce();
+        }
         return 0;
     }
-
+    std::cout<<"Start recognize counter ...\n";
     while (ros::ok())
-    {
-        FilterLaser.runOnce();
+    {   
+        
         ros::spinOnce();
         rate.sleep();
+        FilterLaser.runOnce();
     }
     return 0;
 }
@@ -366,7 +483,7 @@ void FilterLaser::loadParameters(){
     scan_topic_ = scan_topic;
     ROS_DEBUG("scan_topic: %s", scan_topic_.c_str());
 
-    nh_.param<bool>("publish_markers", pub_markers, false);
+    nh_.param<bool>("publish_markers", pub_markers, true);
     pub_markers_ = pub_markers;
     ROS_DEBUG("publish_markers: %s", pub_markers ? "true" : "false");
 
@@ -408,11 +525,11 @@ void FilterLaser::loadParameters(){
     line_extraction_.setMinSplitDist(min_split_dist);
     ROS_DEBUG("min_split_dist: %f", min_split_dist);
 
-    nh_.param<double>("outlier_dist", outlier_dist, 0.05);
+    nh_.param<double>("outlier_dist", outlier_dist, 0.06);
     line_extraction_.setOutlierDist(outlier_dist);
     ROS_DEBUG("outlier_dist: %f", outlier_dist);
 
-    nh_.param<int>("min_line_points", min_line_points, 9);
+    nh_.param<int>("min_line_points", min_line_points, 10);
     line_extraction_.setMinLinePoints(static_cast<unsigned int>(min_line_points));
     ROS_DEBUG("min_line_points: %d", min_line_points);
 
