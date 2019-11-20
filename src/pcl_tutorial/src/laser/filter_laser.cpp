@@ -171,7 +171,7 @@ public:
             angle +=angle_increment_;
 
             // point distance less than max_radius+1.0
-            if(range_cur_[i]>max_radius_+1.0 || range_cur_[i]<0.1){
+            if(range_cur_[i]>max_radius_ || range_cur_[i]<0.1){
                 data_cur_.ranges[i]=0;
                 data_cur_.intensities[i]=0;
                 continue;
@@ -232,7 +232,7 @@ public:
             //std::cout<<i<<":"<<filtered_indices_[i]<<" "<<"x:"<<x<<"  y:"<<y<<std::endl;
             // less than max_radius_ and not in the counter
             if(foud_counter_pose_){
-                if(calLineLength(x,y,pose_.position.x,pose_.position.y)>COUNTER_RADIUS && calLineLength(x,y,0,0) <max_radius_+1.0 ){
+                if(calLineLength(x,y,pose_.position.x,pose_.position.y)>COUNTER_RADIUS && calLineLength(x,y,0,0) <max_radius_ ){
                     output.push_back(filtered_indices_[i]);
                     outliers++;
                     cx=cx*(outliers-1)/(double)outliers+x/(double)outliers;
@@ -436,6 +436,8 @@ int main(int argc,char ** argv){
     std::string source_file;
     bool init_source;
     nh.param<std::string>("source_file", source_file, "source.pcd");
+
+    //change to true to init source
     nh.param<bool>("init_source", init_source, false);
 
     double frequency;
