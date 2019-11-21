@@ -22,6 +22,8 @@ rosrun pcl_tutorial main reso/box_small/thin.pcd -o 0.7 -d 0.01 -t 1000 -n 100 -
 # laser line
 roslaunch pcl_tutorial filter_laser.launch
 
+roslaunch laserline laserline.launch 
+
 roslaunch laser_line_extraction example.launch
 rosrun pcl_tutorial counter_pose 2.0 0.65,0.75
 # tf

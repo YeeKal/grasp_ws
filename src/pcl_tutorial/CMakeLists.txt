@@ -121,7 +121,7 @@ add_executable(save_rgb src/save_rgb.cpp)
 target_link_libraries(save_rgb ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 add_executable(save_depth_with_mask src/save_depth_with_mask.cpp)
-target_link_libraries(save_depth_with_mask ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+target_link_libraries(save_depth_with_mask ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${YAML_CPP_LIBRARIES})
 
 add_subdirectory(src/super_4pcs)
 add_subdirectory(src/laser)

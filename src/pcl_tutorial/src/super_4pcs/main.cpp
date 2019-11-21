@@ -126,7 +126,8 @@ bool loadPointCloud(std::string argv,PointCloudT::Ptr cloud){
 	return false;
 }
 
-// rosrun pcl_tutorial main  block/edit_block/del2_t.pcd  -o 0.7 -d 0.01 -t 1000 -n 200 -it 20
+// rosrun pcl_tutorial main reso/box_small/thin.pcd -o 0.7 -d 0.01 -t 1000 -n 100 -it 20
+//rosrun pcl_tutorial main reso/box_big/edit_block/del2.pcd -o 0.7 -d 0.01 -t 1000 -n 200 -it 20
 
 
 int main(int argc, char** argv)

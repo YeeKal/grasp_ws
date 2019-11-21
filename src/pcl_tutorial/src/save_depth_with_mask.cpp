@@ -1,5 +1,6 @@
 
 #include <ros/ros.h>
+#include <ros/package.h>
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
@@ -13,6 +14,8 @@
 #include <pcl/point_cloud.h>  
 #include <pcl/visualization/pcl_visualizer.h>
 #include <pcl/visualization/cloud_viewer.h>  
+
+#include <yaml-cpp/yaml.h>
 
 #include <thread>
 #include <pthread.h>
@@ -57,6 +60,16 @@ public:
      hsv_(HSVSegmentation(100,123, 150,255,85,220)),
      it_(nh_),save_img_(false),filenum_(0)
     {
+        //load parameter
+        std::string package_path = ros::package::getPath("pcl_tutorial");
+        std::string config_file=package_path+"/config/supicp.yaml";//"home/yee/ros_ws/grasp_ws/src/pcl_tutorial/config/supicp.yaml";
+        YAML::Node config = YAML::LoadFile(config_file);
+        int id=config["id"].as<int>();
+        std::cout<<id<<std::endl;
+        vector<int> hsv_limits=config["param"][config["box"][id].as<std::string>()]["hsv"].as<vector<int> >();
+        //HSVSegmentation hsv(85,125,20,255,20,255);
+        hsv_=HSVSegmentation(hsv_limits[0],hsv_limits[1],hsv_limits[2],hsv_limits[3],hsv_limits[4],hsv_limits[5]);
+
         // Subscrive to input video feed and publish output video feed
         image_sub_ = it_.subscribe(topic_name_, 1,
         &ImageConverter::imageCb, this);
@@ -207,6 +220,8 @@ void printHelp(){
     std::cout << "***************************************************************************" << std::endl;
 
 }
+
+// rosrun pcl_tutorial save_depth_with_mask /kinect/rgb /kinect/depth imgs
 int main(int argc, char** argv)
 {
     ros::init(argc, argv, "image_converter");
@@ -225,6 +240,11 @@ int main(int argc, char** argv)
     if(argc>3){
         saved_folder=argv[3];
     }
+    std::cout<<"rgb topic:"<<rgb_topic<<std::endl;
+    std::cout<<"depth topic:"<<depth_topic<<std::endl;
+    std::cout<<"saved folder:"<<saved_folder<<std::endl;
+
+
     viewer = createViewer();
     ImageConverter ic(rgb_topic,depth_topic, saved_folder);
     
