@@ -101,6 +101,7 @@ right gripper:
 - motoman sda5f driver
 - [calibration](https://github.com/lixiny/Handeye-Calibration-ROS)
 - [laser_line_extration](https://github.com/kam3k/laser_line_extraction)
+- [laser_line_segment]()
 
 #### ros package extral
 
@@ -117,5 +118,6 @@ right gripper:
 - [Sophus](https://github.com/stonier/sophus) for `calibration`
 - [Ceres](http://ceres-solver.org/) for `calibration`
 - [gflags](https://github.com/gflags/gflags) for `calibration`
+- [ncurses](): sudo apt-get install libncurses5-dev
 
 

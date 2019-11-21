@@ -25,6 +25,7 @@ find_package(catkin REQUIRED COMPONENTS
 
   obj_srv
   laser_line_extraction
+  laser_line_segment
 )
 
 

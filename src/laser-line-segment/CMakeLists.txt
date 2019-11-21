@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(laserline)
+project(laser_line_segment)
 
 find_package(Boost REQUIRED COMPONENTS system thread)
 ## Find catkin macros and libraries
@@ -24,7 +24,7 @@ find_package(catkin REQUIRED
 catkin_package(
     INCLUDE_DIRS include
     CATKIN_DEPENDS rosconsole
-    LIBRARIES libhokuyo
+    LIBRARIES line_feature
     CATKIN_DEPENDS message_runtime
 )
 
@@ -39,6 +39,9 @@ pkg_check_modules( ncurses REQUIRED ncurses)
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 include_directories(include ${catkin_INCLUDE_DIRS})
 
+add_library(line_feature src/line_feature.cpp)
+target_link_libraries(line_feature ${catkin_LIBRARIES})
+
 
 add_executable(laserline src/main.cpp src/laser_feature_ros.cpp src/line_feature.cpp)
 
@@ -47,9 +50,11 @@ target_link_libraries(laserline ${Boost_LIBRARIES} ${catkin_LIBRARIES} ${ncurses
 install(DIRECTORY include/${PROJECT_NAME}/
         DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
 )
-install(TARGETS laserline
-        DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+# install(TARGETS laserline
+#         DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+# )
+install(TARGETS line_feature  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION} LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION} RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION})
+
 ## Add gtest based cpp test target and link libraries
 # catkin_add_gtest(${PROJECT_NAME}-test test/laserline.cpp)
 # if(TARGET ${PROJECT_NAME}-test)

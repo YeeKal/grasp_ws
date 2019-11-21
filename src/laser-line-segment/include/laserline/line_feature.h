@@ -37,6 +37,8 @@ class LineFeature
 		void setRangeData(const std::vector<double>&); 
 		//返回直线分割结果
 		void extractLines(std::vector<line>&,std::vector<gline>&);
+		void extractLinesWithIndex(std::vector<line>& temp_line1,std::vector<gline>& temp_line2,std::vector<unsigned int> &index);
+
 		//设置参数
 		void set_angle_increment(double);
 		void set_angle_start(double);
@@ -59,8 +61,8 @@ class LineFeature
 		//整理整条直线
 		void cleanline();
 		//删除小于长度阈值的线段
-		bool delete_short_line(const int,const int);
-		//
+		bool detect_short_line(const int,const int);
+		//generate endpoints
 		void generate(std::vector<gline>& temp_line2);
 	private:
 		CSdata cs_data_;
