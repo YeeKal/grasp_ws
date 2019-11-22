@@ -321,7 +321,7 @@ public:
                              end[0],
                              end[1]
                             ); 
-            std::cout<<"line length:"<<line_length<<std::endl;            
+            //std::cout<<"line length:"<<line_length<<std::endl;            
             if(line_length>line_max_ || line_length<line_min_) continue;
             // not greedy mode, one is enough
             // for debug
@@ -486,7 +486,7 @@ int main(int argc,char ** argv){
         }
         return 0;
     }
-    std::cout<<"Start recognize counter ...\n";
+    std::cout<<"Start recognize counter at frequency:"<<frequency<<"Hz\n";
     while (ros::ok())
     {   
         
@@ -538,7 +538,7 @@ void FilterLaser::loadParameters(){
 	line_feature_.set_seed_line_points(seed_line_points);
 	ROS_DEBUG("seed_line_points: %d", seed_line_points);
 
-  	nh_local_.param<int>("min_line_points", min_line_points, 12);
+  	nh_local_.param<int>("min_line_points", min_line_points, 20);
   	line_feature_.set_min_line_points(min_line_points);
   	ROS_DEBUG("min_line_points: %d", min_line_points);
 
