@@ -447,7 +447,7 @@ int main(int argc,char ** argv){
 
     FilterLaser FilterLaser(source_file,init_source);
 
-
+    init_source=false;
     // init source file
     if(init_source){
         std::cout<<"Start init source."<<std::endl;
