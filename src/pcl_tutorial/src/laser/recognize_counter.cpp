@@ -12,6 +12,7 @@
 #include <sensor_msgs/LaserScan.h> 
 #include <visualization_msgs/Marker.h>
 #include <geometry_msgs/Point.h>
+#include <geometry_msgs/Pose2D.h>
 #include <geometry_msgs/PoseArray.h>
 #include <tf/transform_broadcaster.h>
 
@@ -37,6 +38,7 @@ public:
     ros::Subscriber sub_scan_;      // subscriber to get laser data
     ros::Publisher pub_scan_;       // publisher for the laser data after processed
     ros::Publisher pub_line_;       // publisher for the detected line
+    ros::Publisher pub_pose2d_;       // publisher for the detected line
     ros::Publisher pub_line_marker_;     // publisher for the markers in represent of lines
     ros::Publisher pub_people_marker_;     // publisher for the markers in represent of lines
     ros::ServiceServer service_;    // service to give the counter pose
@@ -75,6 +77,7 @@ public:
 
     visualization_msgs::Marker marker_people_;
     sensor_msgs::LaserScan data_cur_;
+    geometry_msgs::Pose2D pose2d_;
 
     bool init_source_;
 
@@ -109,6 +112,7 @@ public:
         loadParameters();
         sub_scan_=nh_.subscribe(scan_topic_,100,&FilterLaser::laserCB,this);
         pub_scan_=nh_.advertise<sensor_msgs::LaserScan>("scan2",100);
+        pub_pose2d_=nh_.advertise<geometry_msgs::Pose2D>("counter_pose2d",50);
         if (pub_markers_){
             pub_line_marker_ = nh_.advertise<visualization_msgs::Marker>("line_markers", 10);
             pub_people_marker_=nh_.advertise<visualization_msgs::Marker>("people_markers", 10);
@@ -285,6 +289,7 @@ public:
     void notifyAll(){
         // publish line
         pub_scan_.publish(data_cur_);
+        if(foud_counter_pose_) pub_pose2d_.publish(pose2d_);
 
         // Also publish markers if parameter publish_markers is set to true
         if (pub_markers_)
@@ -326,11 +331,17 @@ public:
             // not greedy mode, one is enough
             // for debug
             found =true;
+            double x=(start[0]+end[0]+COUNTER_WIDTH*cos(angle))/2;
+            double y=(start[1]+end[1]+COUNTER_WIDTH*sin(angle))/2;
+            pose2d_.x=x;
+            pose2d_.y=y;
+            pose2d_.theta=angle;
+
 
             Eigen::Quaterniond q;
             q=Eigen::AngleAxisd(angle,Eigen::Vector3d::UnitZ());
-            pose_.position.x=filterLowX((start[0]+end[0]+COUNTER_WIDTH*cos(angle))/2);
-            pose_.position.y=filterLowY((start[1]+end[1]+COUNTER_WIDTH*sin(angle))/2);
+            pose_.position.x=filterLowX(x);
+            pose_.position.y=filterLowY(y);
             pose_.position.z=0;
             pose_.orientation.x=q.x();
             pose_.orientation.y=q.y();

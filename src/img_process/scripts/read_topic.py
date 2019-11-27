@@ -13,13 +13,26 @@ from std_msgs.msg import (
 from geometry_msgs.msg import( Pose2D)
 
 
+class ReadPose():
+    def __init__(self,topic="counter_pose2d",file_name="pose.csv"):
+        self.num=0
+        self.topic=topic
+        self.file=open(file_name,'w')
+        self.writer=csv.writer(self.file)
+        self.pose_sub=rospy.Subscriber(self.topic,Pose2D,self.poseCB)
+        pass
 
-def poseCB(data):
-    writer.writerow([data.data.x,data.data.y,data.data.theta])
+    def poseCB(self,data):
+        self.num =self.num+1
+        self.writer.writerow([self.num,data.x,data.y,data.theta])
+        if self.num%20==0:
+            print("%d saved"%self.num)
 
-file=open("pose.csv",'w')
-writer=csv.writer(file)
-topic="haha"
-rospy.init_node('read_topic')
-pose_sub=rospy.Subscriber(topic,Pose2D,poseCB)
-rospy.spin()
+
+if __name__ == '__main__':
+    rospy.init_node('read_topic')
+    reader=ReadPose("counter_pose2d","pose2.csv")
+    rospy.spin()
+
+    reader.file.close()
+    print("%d saved. All completed."%reader.num)
