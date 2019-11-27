@@ -1,3 +1,4 @@
+# -*- coding=utf-8 -*- 
 #!/usr/bin/env python
 import csv
 import matplotlib.pyplot as plt
@@ -9,19 +10,25 @@ import numpy as np
 # plt.rcParams['axes.unicode_minus'] = False
 
 try:
-    file=open("pose.csv")
+    file=open("pose2.csv")
 except FileNotFoundError:
-    print('文件不存在')
+    print("Not valid file")
 else:
     data=np.loadtxt(file,delimiter = ",")
+    #print(data)
     data[:,0]=data[:,0]/20
     filtered_data=[]
 
-
-    Qs=[1e-6,1e-6,1e-6]
+    #dynamic
+    Qs=[1e-3,1e-3,1e-3]
     Rs=[0.01,0.01,0.01]
-    Ps=[1e-4,1e-4,1e-4]
+    Ps=[1e-2,1e-2,1e-2]
     Ks=[1e-3,1e-3,1e-3]
+    # static
+    # Qs=[1e-6,1e-6,1e-6]
+    # Rs=[0.01,0.01,0.01]
+    # Ps=[1e-4,1e-4,1e-4]
+    # Ks=[1e-3,1e-3,1e-3]
     plt.figure(figsize=(18, 9))
     num = np.size(data,0)
     sz = (num,)
