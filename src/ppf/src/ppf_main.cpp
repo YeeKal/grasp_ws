@@ -13,6 +13,8 @@
 #include <pcl/io/pcd_io.h>
 #include <pcl/common/transforms.h>
 #include <pcl/visualization/pcl_visualizer.h>
+#include <pcl/filters/approximate_voxel_grid.h>
+
 
 #include <pcl/console/parse.h>
 #include <pcl/PolygonMesh.h>
@@ -25,7 +27,7 @@
 #include <pcl/registration/icp.h>
 #include <pcl/segmentation/sac_segmentation.h>
 
-#define voting_thred 80
+#define voting_thred 200
 
 using namespace std;
 using namespace cv;
@@ -37,7 +39,7 @@ const double camera_cx = 319.5;//325.5//319.5 310.95 310.95
 const double camera_cy = 239.5;//253.5//239.5 234.74 234.74
 const double camera_fx = 570.3422;//518.0//570.3422(openni2) 615.377
 const double camera_fy = 570.3422;//519.0//570.3422(openni2) 615.377
-ppf::PPF6DDetector detector(0.06, 9.0, 9.0, 0.03); //0.05, 9, 12, 0.03
+ppf::PPF6DDetector detector(0.03, 9.0, 12.0, 0.01); //0.05, 9, 12, 0.03
 pcl::PointCloud<pcl::PointXYZ>::Ptr scene (new pcl::PointCloud<pcl::PointXYZ> ());
 pcl::PointCloud<pcl::PointXYZRGBA>::Ptr scene_rgb (new pcl::PointCloud<pcl::PointXYZRGBA> ());
 pcl::PointCloud<pcl::PointNormal>::Ptr scene_with_normals (new pcl::PointCloud<pcl::PointNormal> ());
@@ -197,46 +199,11 @@ void getModelName(int argc, char** argv,pcl::PointCloud<pcl::PointXYZ>::Ptr mode
 }
 
 void filterScene(pcl::PointCloud<pcl::PointXYZ>::Ptr scene){
-    
 
-    pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients ());
-    pcl::PointIndices::Ptr inliers (new pcl::PointIndices ());
-    // Create the segmentation object
-    pcl::SACSegmentation<pcl::PointXYZ> seg;
-    // Optional
-    seg.setOptimizeCoefficients (true);
-    // Mandatory
-    seg.setModelType (pcl::SACMODEL_PLANE);
-    seg.setMethodType (pcl::SAC_RANSAC);
-    seg.setMaxIterations (1000);
-    seg.setDistanceThreshold (0.01);
-    pcl::ExtractIndices<pcl::PointXYZ> extract;
-    seg.setInputCloud (scene);
-    seg.segment (*inliers, *coefficients);
-    //std::cout<<"inlier size:"<<inliers->indices.size ()<<std::endl;
-    if (inliers->indices.size () == 0)
-    {
-        std::cerr << "Could not estimate a planar model for the given dataset." << std::endl;
-        //return 0;
-    }
-
-    // Extract the inliers
-    extract.setInputCloud (scene);
-    extract.setIndices (inliers);
-    extract.setNegative (true);
-    extract.filter (*scene);
-
-    pcl::PassThrough<pcl::PointXYZ> pass;
-    pass.setInputCloud (scene);
-    // pass.setFilterFieldName ("b");
-    // pass.setFilterLimits (10, 255);
-    pass.setFilterFieldName ("z");
-    pass.setFilterLimits (0.2, 1.5);
-    pass.filter (*scene);
-    // pass.setFilterFieldName ("x");
-    // pass.setInputCloud (scene);
-    // pass.setFilterLimits (-0.2, 0.4);
-    // pass.filter (*scene);
+	pcl::ApproximateVoxelGrid<pcl::PointXYZ> approximate_voxel_filter;
+	approximate_voxel_filter.setLeafSize (0.01, 0.01, 0.01);
+	approximate_voxel_filter.setInputCloud (scene);
+	approximate_voxel_filter.filter (*scene);
 }
 
 int main(int argc, char** argv)
@@ -249,14 +216,14 @@ int main(int argc, char** argv)
     }
     ros::init(argc, argv, "ppf_main");
     ros::NodeHandle nh;
-    ros::ServiceClient client = nh.serviceClient<obj_srv::rgbd_image>("get_image");
+    ros::ServiceClient client = nh.serviceClient<obj_srv::rgbd_image>("kinect_server");
     ros::ServiceServer service = nh.advertiseService("obj_start", obj_s);
     obj_srv::rgbd_image srv;
     srv.request.start = true;
     sensor_msgs::Image msg_rgb;
     sensor_msgs::Image msg_depth;
 
-    HSVSegmentation hsv(85,125,20,255,20,255);
+    HSVSegmentation hsv(100,130,130,255,75,230);
 
 
     string modelFileName = (string)argv[1];
@@ -293,7 +260,7 @@ int main(int argc, char** argv)
     ros::Rate loop_rate(200);
     while(ros::ok())
     {
-        Mat rgb,depth;
+        Mat rgb,depth,depth_copy;
         client.call(srv);
         try
         {
@@ -301,6 +268,7 @@ int main(int argc, char** argv)
             msg_depth = srv.response.depth_image;
             rgb = cv_bridge::toCvCopy(msg_rgb, sensor_msgs::image_encodings::BGR8)->image;
             depth = cv_bridge::toCvCopy(msg_depth, sensor_msgs::image_encodings::TYPE_32FC1)->image;
+            depth_copy=depth.clone();
             hsv.setSrc(rgb);
             //hsv.getMask(final_mask);
             hsv.getDepthDst(depth);
@@ -323,13 +291,28 @@ int main(int argc, char** argv)
             {
                 pcl::PointXYZ p;
                 pcl::PointXYZRGBA p_rgb;
-                if(!(depth.at<float>(r,c)>0&&depth.at<float>(r,c)<1.3)){continue;}
+                depth.at<float>(r,c)=double(depth.at<float>(r,c))/1000.0;
+                if(!(depth.at<float>(r,c)>0&&depth.at<float>(r,c)<1.5)){continue;}
                 double scene_z = double(depth.at<float>(r,c));
                 double scene_x = (c - camera_cx) * scene_z / camera_fx;
                 double scene_y = (r - camera_cy) * scene_z / camera_fy;
                 p.x = scene_x;
                 p.y = scene_y;
                 p.z = scene_z;
+                scene->points.push_back(p);
+            }
+        }
+        for (int r=0;r<rgb.rows;r++)
+        {
+            for (int c=0;c<rgb.cols;c++)
+            {
+                pcl::PointXYZ p;
+                pcl::PointXYZRGBA p_rgb;
+                depth_copy.at<float>(r,c)=double(depth_copy.at<float>(r,c))/1000.0;
+                if(!(depth_copy.at<float>(r,c)>0&&depth_copy.at<float>(r,c)<1.5)){continue;}
+                double scene_z = double(depth_copy.at<float>(r,c));
+                double scene_x = (c - camera_cx) * scene_z / camera_fx;
+                double scene_y = (r - camera_cy) * scene_z / camera_fy;
                 p_rgb.x = scene_x;
                 p_rgb.y = scene_y;
                 p_rgb.z = scene_z;
@@ -339,11 +322,10 @@ int main(int argc, char** argv)
                 p_rgb.r = rgb.ptr<uchar>(r)[c*3+2];
                 p_rgb.g = rgb.ptr<uchar>(r)[c*3+1];
                 p_rgb.b = rgb.ptr<uchar>(r)[c*3];
-                scene->points.push_back(p);
                 scene_rgb->points.push_back(p_rgb);
             }
         }
-        //filterScene(scene);
+        filterScene(scene);
         //filterScene(scene_rgb);
         detector.preProcessing(scene, *scene_with_normals, 0);
 
@@ -358,9 +340,18 @@ int main(int argc, char** argv)
             //viewer2->addPointCloudNormals<pcl::PointNormal> (scene_with_normals, 10, 0.01, "normals");
             Eigen::Matrix4d transformation = Eigen::Matrix4d::Identity ();
             pcl::PointCloud<pcl::PointNormal>::Ptr cloud_ppf (new pcl::PointCloud<pcl::PointNormal>);
-            for (size_t i=0; i<results.size(); i++)
-            {
-                Pose6DPtr result = results[i];
+
+             //find max_votes
+            int index=0;
+            int max_votes=0;
+            for(size_t i=0; i<results.size(); i++){
+                if(results[i]->numVotes>max_votes){
+                    max_votes=results[i]->numVotes;
+                    index=i;
+                }
+            }
+
+                Pose6DPtr result = results[index];
                 if(result->numVotes<voting_thred){continue;}
                 //cout<<"numVotes: "<<result->numVotes<<endl;
                 //cout << "Pose Result " << i << endl;
@@ -369,11 +360,27 @@ int main(int argc, char** argv)
                 pcl::transformPointCloud(*model_with_normals, *cloud_ppf, transformation);
                 pcl::visualization::PointCloudColorHandlerCustom<pcl::PointNormal> single_color(cloud_ppf, 0, 255, 0);
                 stringstream ss;
-                ss<<i;
+                ss<<index;
                 //viewer2->addPointCloudNormals<pcl::PointNormal> (cloud_ppf1, 10, 0.01, "normals2");
                 viewer2->addPointCloud<pcl::PointNormal> (cloud_ppf, single_color, ss.str().c_str());
                 viewer2->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, ss.str().c_str());
-            }
+
+            // for (size_t i=0; i<results.size(); i++)
+            // {
+            //     Pose6DPtr result = results[i];
+            //     if(result->numVotes<voting_thred){continue;}
+            //     //cout<<"numVotes: "<<result->numVotes<<endl;
+            //     //cout << "Pose Result " << i << endl;
+            //     transformation = cvMat2Eigen(result->pose);
+            //     //cout<<transformation<<endl;
+            //     pcl::transformPointCloud(*model_with_normals, *cloud_ppf, transformation);
+            //     pcl::visualization::PointCloudColorHandlerCustom<pcl::PointNormal> single_color(cloud_ppf, 0, 255, 0);
+            //     stringstream ss;
+            //     ss<<i;
+            //     //viewer2->addPointCloudNormals<pcl::PointNormal> (cloud_ppf1, 10, 0.01, "normals2");
+            //     viewer2->addPointCloud<pcl::PointNormal> (cloud_ppf, single_color, ss.str().c_str());
+            //     viewer2->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, ss.str().c_str());
+            // }
         }
         //viewer1->spinOnce();
         viewer2->spinOnce();

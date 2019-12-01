@@ -23,6 +23,8 @@
 #include <pcl/registration/sample_consensus_prerejective.h>
 #include <pcl/registration/icp.h>
 #include <pcl/segmentation/sac_segmentation.h>
+#include <pcl/filters/approximate_voxel_grid.h>
+
 
 #include <yaml-cpp/yaml.h>
 
@@ -47,6 +49,7 @@ const double camera_cy =240.0283;//239.5;// 253.5//239.5 234.74 234.74
 const double camera_fx =536.3783;//570.3422;//518.0//570.3422(openni2) 615.377
 const double camera_fy =539.4028;// 570.3422;//519.0//570.3422(openni2) 615.377
 pcl::PointCloud<pcl::PointXYZ>::Ptr scene (new pcl::PointCloud<pcl::PointXYZ> ());
+pcl::PointCloud<pcl::PointXYZ>::Ptr scene_filter (new pcl::PointCloud<pcl::PointXYZ> ());
 pcl::PointCloud<pcl::PointXYZRGBA>::Ptr scene_rgb (new pcl::PointCloud<pcl::PointXYZRGBA> ());
 pcl::PointCloud<pcl::PointNormal>::Ptr scene_with_normals (new pcl::PointCloud<pcl::PointNormal> ());
 vector<Eigen::Matrix4f> results;
@@ -97,7 +100,7 @@ bool recognizeBlock(obj_srv::obj_6d::Request &req,obj_srv::obj_6d::Response &res
 static void help(const string& errorMessage)
 {
     cout << "Program init error : "<< errorMessage << endl;
-    cout << "\nUsage : rosrun ppf ppf_main [input model file]"<< endl;
+    cout << "\nUsage : rosrun pcl_tutorial main [input model file]"<< endl;
     cout << "\nPlease start again with new parameters"<< endl;
 }
 bool loadPointCloud(std::string argv,PointCloudT::Ptr cloud){
@@ -146,6 +149,10 @@ int main(int argc, char** argv)
     srv.request.start = true;
     sensor_msgs::Image msg_rgb;
     sensor_msgs::Image msg_depth;
+
+	pcl::ApproximateVoxelGrid<pcl::PointXYZ> approximate_voxel_filter;
+	approximate_voxel_filter.setLeafSize (0.01, 0.01, 0.01);
+	
 
     // load config
 	std::string package_path = ros::package::getPath("pcl_tutorial");
@@ -200,7 +207,8 @@ int main(int argc, char** argv)
             return 1;
         }
 
-        scene->points.clear();
+        //scene->points.clear();
+        scene_filter->points.clear();
         scene_rgb->points.clear();
 
         depth_copy=depth.clone();
@@ -220,7 +228,9 @@ int main(int argc, char** argv)
                 p.x = scene_x;
                 p.y = scene_y;
                 p.z = scene_z;
-                scene->points.push_back(p);
+                scene_filter->points.push_back(p);
+                //scene->points.push_back(p);
+
             }
         }
         //scene_rgb
@@ -245,11 +255,15 @@ int main(int argc, char** argv)
             }
         }
 
+        approximate_voxel_filter.setInputCloud (scene_filter);
+	    approximate_voxel_filter.filter (*scene);
+        // *scene = *scene_filter;
         viewer->removeAllPointClouds();
-	    viewer->addPointCloud (scene, cloud_in_color_h, "scene", v1);
+        if(scene->points.size()>0)
+	        viewer->addPointCloud (scene, cloud_in_color_h, "scene", v1);
         viewer->addPointCloud(scene_rgb, "scene_rgb",v2);
         if(results.size()>0)
-        {
+        {   
             //viewer->addPointCloud<pcl::PointNormal> (scene_with_normals, single_color2, "sample cloud1");
             //viewer->addPointCloudNormals<pcl::PointNormal> (scene_with_normals, 10, 0.01, "normals");
             Eigen::Matrix4f transformation = Eigen::Matrix4f::Identity ();
@@ -264,7 +278,7 @@ int main(int argc, char** argv)
                 ss<<i;
                 //viewer->addPointCloudNormals<pcl::PointNormal> (cloud_ppf1, 10, 0.01, "normals2");
                 viewer->addPointCloud<PointT> (cloud_ppf, single_color, ss.str().c_str(),v2);
-                viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, ss.str().c_str());
+                viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, ss.str().c_str());
             }
         }
         //viewer1->spinOnce();
