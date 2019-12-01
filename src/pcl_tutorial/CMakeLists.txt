@@ -94,6 +94,9 @@ target_link_libraries(alignment_prerejective ${catkin_LIBRARIES} ${OpenCV_LIBRAR
 add_executable(icp_block src/icp_block.cpp)
 target_link_libraries(icp_block ${catkin_LIBRARIES})
 
+add_executable(ndt_block src/ndt_block.cpp)
+target_link_libraries(ndt_block ${catkin_LIBRARIES})
+
 
 #add_executable(global_hypothesis src/global_hypothesis.cpp)
 #target_link_libraries(global_hypothesis ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})

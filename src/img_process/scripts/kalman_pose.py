@@ -3,6 +3,12 @@
 import csv
 import matplotlib.pyplot as plt
 import numpy as np
+import sys
+
+filename="pose.csv"
+if len(sys.argv)>1:
+    filename=sys.argv[1]
+
 
 
 # display chinese
@@ -10,7 +16,7 @@ import numpy as np
 # plt.rcParams['axes.unicode_minus'] = False
 
 try:
-    file=open("pose2.csv")
+    file=open(filename)
 except FileNotFoundError:
     print("Not valid file")
 else:
@@ -20,9 +26,13 @@ else:
     filtered_data=[]
 
     #dynamic
+    # Qs=[1e-3,1e-3,1e-3]
+    # Rs=[0.01,0.01,0.01]
+    # Ps=[1e-2,1e-2,1e-2]
+    # Ks=[1e-3,1e-3,1e-3]
     Qs=[1e-3,1e-3,1e-3]
-    Rs=[0.01,0.01,0.01]
-    Ps=[1e-2,1e-2,1e-2]
+    Rs=[0.05,0.05,0.05]
+    Ps=[1e-4,1e-4,1e-4]
     Ks=[1e-3,1e-3,1e-3]
     # static
     # Qs=[1e-6,1e-6,1e-6]
@@ -96,12 +106,12 @@ else:
     plt.plot(data[:,0],data[:,3],color="orange",label="original",linewidth=1)# 85-125
     plt.plot(data[:,0],filtered_data[2],color="red",label="filtered",linewidth=1)# 85-125
     plt.xlabel("t/s")
-    plt.ylabel("theta/rad")
+    plt.ylabel(r"$\theta$/rad")
     plt.legend(loc="upper right")
     plt.text(13,-0.2125,"Standard Deviation"+   \
         "\nOriginal: "+str(format(np.std(data[:,3]),'.6f'))+  \
         "\nFltered:  "+str(format(np.std(filtered_data[2]),'.6f')),   \
         bbox = dict(facecolor = "r", alpha = 0.2))
 
-    plt.subplots_adjust(wspace =0, hspace =0.5)
+    plt.subplots_adjust(wspace =0, hspace =0.3)
     plt.show()

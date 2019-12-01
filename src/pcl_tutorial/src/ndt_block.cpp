@@ -8,8 +8,8 @@
 #include <pcl/registration/icp.h>
 #include <pcl/visualization/pcl_visualizer.h>
 #include <pcl/console/time.h>   // TicToc
+#include <pcl/registration/ndt.h>
 #include <pcl/filters/approximate_voxel_grid.h>
-
 
 using namespace std;
 
@@ -84,41 +84,18 @@ int main (int argc,
 
 	pcl::console::TicToc time;
 	time.tic ();
-	loadPointCloud(argv[1],cloud_source);
+	loadPointCloud(argv[1],cloud_in);
 	loadPointCloud(argv[2],cloud_icp);
 	std::cout << "\nLoaded file " << argv[1] << " (" << cloud_in->size () << " points) in " << time.toc () << " ms\n" << std::endl;
 	time.tic ();
 	std::cout << "\nLoaded file " << argv[2] << " (" << cloud_icp->size () << " points) in " << time.toc () << " ms\n" << std::endl;
 
-	// // Defining a rotation matrix and translation vector
-	//for big box
-	Eigen::Affine3d ini_pose=Eigen::Affine3d::Identity();
-	Eigen::Matrix3d ini_rot;
-    ini_rot=Eigen::AngleAxisd(M_PI/2,Eigen::Vector3d::UnitX());
-    ini_pose.prerotate(ini_rot);
-	//Eigen::Matrix4d transformation_matrix = ini_pose.matrix();
+
 	Eigen::Matrix4d transformation_matrix = Eigen::Affine3d::Identity().matrix();
-	pcl::transformPointCloud (*cloud_source, *cloud_in, transformation_matrix);
 
-	// // A rotation matrix (see https://en.wikipedia.org/wiki/Rotation_matrix)
-	// double theta = M_PI / 8;  // The angle of rotation in radians
-	// transformation_matrix (0, 0) = std::cos (theta);
-	// transformation_matrix (0, 1) = -sin (theta);
-	// transformation_matrix (1, 0) = sin (theta);
-	// transformation_matrix (1, 1) = std::cos (theta);
-
-	// // A translation on Z axis (0.4 meters)
-	// transformation_matrix (2, 3) = 0.4;
-
-	// // Display in terminal the transformation matrix
-	// std::cout << "Applying this rigid transformation to: cloud_in -> cloud_icp" << std::endl;
-	// print4x4Matrix (transformation_matrix);
-
-	// // Executing the transformation
-	// pcl::transformPointCloud (*cloud_in, *cloud_icp, transformation_matrix);
 	*cloud_tr = *cloud_icp;  // We backup cloud_icp into cloud_tr for later use
 
-		pcl::PointCloud<pcl::PointXYZ>::Ptr filtered_cloud (new pcl::PointCloud<pcl::PointXYZ>);
+	pcl::PointCloud<pcl::PointXYZ>::Ptr filtered_cloud (new pcl::PointCloud<pcl::PointXYZ>);
 	pcl::ApproximateVoxelGrid<pcl::PointXYZ> approximate_voxel_filter;
 	approximate_voxel_filter.setLeafSize (0.01, 0.01, 0.01);
 	approximate_voxel_filter.setInputCloud (cloud_icp);
@@ -128,32 +105,54 @@ int main (int argc,
 
 	// The Iterative Closest Point algorithm
 	time.tic ();
-	pcl::IterativeClosestPoint<PointT, PointT> icp;
-	icp.setMaximumIterations (iterations);
-	// icp.setMaxCorrespondenceDistance(100);  
-	icp.setTransformationEpsilon(1e-5); 
-	// icp.setEuclideanFitnessEpsilon(0.001); 
-	icp.setInputSource (filtered_cloud);
-	icp.setInputTarget (cloud_in);
-	icp.align (*cloud_icp);
-	icp.setMaximumIterations (1);  // We set this variable to 1 for the next time we will call .align () function
+
+	pcl::NormalDistributionsTransform<PointT, PointT> ndt;
+
+	// Setting scale dependent NDT parameters
+	// Setting minimum transformation difference for termination condition.
+	ndt.setTransformationEpsilon (0.0001);
+	// Setting maximum step size for More-Thuente line search.
+	ndt.setStepSize (0.01);
+	//Setting Resolution of NDT grid structure (VoxelGridCovariance).
+	ndt.setResolution (0.05);
+
+
+	// Setting max number of registration iterations.
+	ndt.setMaximumIterations (iterations);
+
+	// Setting point cloud to be aligned.
+	ndt.setInputSource (filtered_cloud);
+	// Setting point cloud to be aligned to.
+	ndt.setInputTarget (cloud_in);
+
+		// Set initial alignment estimate found using robot odometry.
+	Eigen::AngleAxisf init_rotation (0.6931, Eigen::Vector3f::UnitZ ());
+	Eigen::Translation3f init_translation (1.79387, 0.720047, 0);
+	//Eigen::Matrix4f init_guess = (init_translation * init_rotation).matrix ();
+	Eigen::Matrix4f init_guess = Eigen::Matrix4f::Identity();
+
+	std::cout<<"haha\n";
+	pcl::PointCloud<pcl::PointXYZ>::Ptr output_cloud (new pcl::PointCloud<pcl::PointXYZ>);	
+	ndt.align (*cloud_icp);
+	
+	ndt.setMaximumIterations (1);  // We set this variable to 1 for the next time we will call .align () function
 	std::cout << "Applied " << iterations << " ICP iteration(s) in " << time.toc () << " ms" << std::endl;
 
-	if (icp.hasConverged ())
+	if (ndt.hasConverged ())
 	{
-		std::cout << "\nICP has converged, score is " << icp.getFitnessScore () << std::endl;
+		std::cout << "\nICP has converged, score is " << ndt.getFitnessScore () << std::endl;
 		std::cout << "\nICP transformation " << iterations << " : cloud_icp -> cloud_in" << std::endl;
-		transformation_matrix = icp.getFinalTransformation ().cast<double>();
+		transformation_matrix = ndt.getFinalTransformation ().cast<double>();
 		print4x4Matrix (transformation_matrix);
 	}
 	else
 	{
-		PCL_ERROR ("\nICP has not converged.\n");
+		PCL_ERROR ("\ndt has not converged.\n");
 		return (-1);
 	}
 
 	// Visualization
-	pcl::visualization::PCLVisualizer viewer ("ICP demo");
+	pcl::visualization::PCLVisualizer viewer ("ndt demo");
 	viewer.addCoordinateSystem (1.0);
 	// Create two vertically separated viewports
 	int v1 (0);
@@ -209,16 +208,16 @@ int main (int argc,
 		{
 		// The Iterative Closest Point algorithm
 		time.tic ();
-		icp.align (*cloud_icp);
+		ndt.align (*cloud_icp);
 		std::cout << "Applied 1 ICP iteration in " << time.toc () << " ms" << std::endl;
 
-		if (icp.hasConverged ())
+		if (ndt.hasConverged ())
 		{
 			printf ("\033[11A");  // Go up 11 lines in terminal output.
-		std::cout<<"euclaian spsilon:"<<icp.getEuclideanFitnessEpsilon ()<<std::endl;
-			printf ("\nICP has converged, score is %+.0e\n", icp.getFitnessScore ());
+		std::cout<<"euclaian spsilon:"<<ndt.getEuclideanFitnessEpsilon ()<<std::endl;
+			printf ("\nICP has converged, score is %+.0e\n", ndt.getFitnessScore ());
 			std::cout << "\nICP transformation " << ++iterations << " : cloud_icp -> cloud_in" << std::endl;
-			transformation_matrix *= icp.getFinalTransformation ().cast<double>();  // WARNING /!\ This is not accurate! For "educational" purpose only!
+			transformation_matrix *= ndt.getFinalTransformation ().cast<double>();  // WARNING /!\ This is not accurate! For "educational" purpose only!
 			print4x4Matrix (transformation_matrix);  // Print the transformation between original pose and current pose
 
 			ss.str ("");

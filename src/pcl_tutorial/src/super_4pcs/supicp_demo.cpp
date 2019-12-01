@@ -11,6 +11,10 @@
 #include <pcl/registration/icp.h>
 #include <pcl/visualization/pcl_visualizer.h>
 #include <pcl/console/time.h>   // TicToc
+#include <pcl/registration/ndt.h>
+#include <pcl/filters/approximate_voxel_grid.h>
+
+
 
 #include <opencv2/core/core.hpp>
 #include <yaml-cpp/yaml.h>
@@ -78,7 +82,15 @@ int main (int argc,
 	loadPointCloud(argv[2],cloud_tr);
 	std::cout << "\nLoaded file " << argv[1] << " (" << cloud_in->size () << " points) in " << time.toc () << " ms\n" << std::endl;
 	time.tic ();
-	std::cout << "\nLoaded file " << argv[2] << " (" << cloud_icp->size () << " points) in " << time.toc () << " ms\n" << std::endl;
+	std::cout << "\nLoaded file " << argv[2] << " (" << cloud_tr->size () << " points) in " << time.toc () << " ms\n" << std::endl;
+
+			pcl::PointCloud<pcl::PointXYZ>::Ptr filtered_cloud (new pcl::PointCloud<pcl::PointXYZ>);
+	pcl::ApproximateVoxelGrid<pcl::PointXYZ> approximate_voxel_filter;
+	approximate_voxel_filter.setLeafSize (0.01, 0.01, 0.01);
+	approximate_voxel_filter.setInputCloud (cloud_tr);
+	approximate_voxel_filter.filter (*filtered_cloud);
+	std::cout << "Filtered cloud contains " << filtered_cloud->size ()
+				<< " data points from room_scan2.pcd" << std::endl;
 
 
 	// // Defining a rotation matrix and translation vector
@@ -93,7 +105,7 @@ int main (int argc,
 	
 	// The Iterative Closest Point algorithm
 	time.tic ();
-	sup_icp.setInputSource(cloud_tr);
+	sup_icp.setInputSource(filtered_cloud);
 	sup_icp.setInputTarget(cloud_in);
 	//set the converge criterion to the euclidean distance
 	//sup_icp.icp_.setEuclideanFitnessEpsilon(1e-06); 

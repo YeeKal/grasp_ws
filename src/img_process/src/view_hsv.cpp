@@ -120,7 +120,7 @@ int main(int argc, char** argv)
 	int image_num=0;
 
 	//HSVSegmentation hsv(85,125,20,255,20,255);	//big box
-	HSVSegmentation hsv(100,130, 130,255,75,230);	// small box
+	HSVSegmentation hsv(100,130,130,255,75,230);	// small box
 
 	for(int i=0;i<image_files.size();i++){
 		image_num++;
