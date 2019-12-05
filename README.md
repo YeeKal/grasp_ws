@@ -126,4 +126,25 @@ right gripper:
 - [gflags](https://github.com/gflags/gflags) for `calibration`
 - [ncurses](): sudo apt-get install libncurses5-dev
 
+## pose estimation paras
+
+```
+items           time/ms   score/e-5
+super4pcs+icp   479         3.264
+                498         3.971
+super4pcs       289         3.682
+                241         3.98
+                281         4.337
+                688         3.45
+super4pcs(before)212        3.9
+                428         3.25
+                374         4.62
+super4pcs+icp   1460        2.73
+                1380        2.82
+                1040        2.75
+ppf             400         k
+                1020
+                876
+```
+
 

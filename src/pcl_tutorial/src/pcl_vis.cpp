@@ -65,9 +65,10 @@ int main (int argc, char** argv)
     //view point cloud
     pcl::visualization::PCLVisualizer viewer("pointcloud viewer");
     pcl::visualization::PointCloudColorHandlerCustom<PointT> sig(cloud, 0, 234, 0);
-    viewer.addCoordinateSystem (1.0);
+    viewer.addCoordinateSystem (0.3);
     // viewer.addPointCloud(cloud, sig, "cloud");
     viewer.addPointCloud(cloud);
+    viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3);
 
     while (!viewer.wasStopped())
     {
