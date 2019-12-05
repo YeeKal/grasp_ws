@@ -57,6 +57,12 @@ initial states:
     [arm_left_joint_1_s, arm_left_joint_2_l, arm_left_joint_3_e, arm_left_joint_4_u, arm_left_joint_5_r,arm_left_joint_6_b, arm_left_joint_7_t]
     position: [2.6937308311462402, -1.7499834299087524, -1.922503113746643, 0.04039989039301872, 0.8331186175346375, -1.1421606540679932, 1.8852884769439697]
 
+initial_states(2019-12-05):
+
+    [arm_left_joint_1_s, arm_left_joint_2_l, arm_left_joint_3_e, arm_left_joint_4_u, arm_left_joint_5_r,
+  arm_left_joint_6_b, arm_left_joint_7_t]
+position: [-0.022554073482751846, 1.3352922201156616, 1.1472201347351074, 0.19595465064048767, 0.7072410583496094, -0.9488791227340698, 1.834251046180725]
+
 #### laser
 
 hokuyo: 40hz
