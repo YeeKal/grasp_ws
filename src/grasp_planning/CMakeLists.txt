@@ -61,3 +61,7 @@ target_link_libraries(grasp_based_laser ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 add_executable(cbirrt_demo src/cbirrt_demo.cpp)
 target_link_libraries(cbirrt_demo ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
+add_executable(planning_in_cabin src/planning_in_cabin.cpp)
+target_link_libraries(planning_in_cabin ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+
+
