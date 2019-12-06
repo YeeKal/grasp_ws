@@ -121,6 +121,7 @@ public:
         //
         ac_.reset(new actionlib::SimpleActionClient<control_msgs::FollowJointTrajectoryAction>("/sda5f/sda5f_r2_controller/joint_trajectory_action", true));
 
+        ROS_INFO("Wait for execute action to connect server.");
         ac_->waitForServer(); //will wait for infinite time
 
         ROS_INFO("Action server started, sending goal.");
@@ -134,42 +135,16 @@ public:
         if(!wait) return true;
         bool finished_before_timeout = ac_->waitForResult(ros::Duration(30.0));
 
-        if (finished_before_timeout)
-        {
-            std::cout<<"action completed\n";
-            actionlib::SimpleClientGoalState state = ac_->getState();
-            ROS_INFO("Action finished: %s",state.toString().c_str());
-        }
-        else
+        if (!finished_before_timeout)   {
             ROS_INFO("Action did not finish before the time out.");
-        return true;
-
-        // if (!execute_trajectory_handle_->isConnected())
-        // {
-        //     //return MoveItErrorCode(moveit_msgs::MoveItErrorCodes::FAILURE);
-        //     std::cout<<"execute client: SERVER NOT CONNECTED\n";
-        //     return false;
-        // }
-
-        // execute_trajectory_handle_->sendTrajectory(robot_trajectory);
-        // if (!wait)
-        // {   //trajectory has been send
-        //     return true;
-        // }
-        // //wait until finish
-        // if (!execute_trajectory_handle_->waitForExecution()){
-        //     std::cout<<"execute action returned early\n";
-        // }
-        // if (execute_trajectory_handle_->getLastExecutionStatus() == moveit_controller_manager::ExecutionStatus::SUCCEEDED)
-        // {
-        //     return true;
-        // }
-        // else
-        // {
-        //     std::cout<<"execute client:"<<execute_trajectory_handle_->getLastExecutionStatus().asString().c_str()<<std::endl;
-        //     return false;
-        // }
-                                                    
+            return false;
+        }
+        actionlib::SimpleClientGoalState state = ac_->getState();
+        ROS_INFO("Action finished: %s",state.toString().c_str());
+        if(state==actionlib::SimpleClientGoalState::SUCCEEDED){
+            return true;
+        }
+        return false;                                          
     }
 
 
