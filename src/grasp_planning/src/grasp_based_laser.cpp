@@ -135,10 +135,10 @@ int main(int argc, char **argv)
     display_publisher.publish(display_trajectory);
     std::cout<<"Joint planning: execute ..."<<std::endl;
 
-    gm.pm_->execute(robot_trajectory,false);
-    std::cout<<"Execution finished.";
-    sleep_t.sleep();
-    getchar();
+    // gm.pm_->execute(robot_trajectory,true);
+    // std::cout<<"Execution finished.";
+    // sleep_t.sleep();
+    // getchar();
 
     // gm.pm_->updateRobotState();
     // if(!gm.posePlanning(pose2,robot_trajectory)){
@@ -147,11 +147,12 @@ int main(int argc, char **argv)
     //     return -1;
     // }
     // std::cout<<"Pose planning: execute ..."<<std::endl;
-    // moveit::planning_interface::MoveGroupInterface::Plan my_plan;
-    // my_plan.trajectory_=robot_trajectory;
-    // gm.pm_->move_group_->execute(my_plan);
-    // gm.pm_->execute(robot_trajectory,false);
-    // sleep_t.sleep();
+    moveit::planning_interface::MoveGroupInterface::Plan my_plan;
+    my_plan.trajectory_=robot_trajectory;
+    //gm.pm_->move_group_->execute(my_plan);
+    gm.execute(robot_trajectory,true);
+    std::cout<<"Execution finished.";
+    sleep_t.sleep();
 
     if(!gm.cartesianPlanning(pose1,robot_trajectory)){
         std::cout<<"Cartesian planning failed."<<std::endl;

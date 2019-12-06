@@ -28,6 +28,8 @@
 #include <eigen_stl_containers/eigen_stl_vector_container.h>
 #include <motoman_msgs/WriteSingleIO.h>
 #include "obj_srv/obj_6d.h"
+#include <actionlib/client/simple_action_client.h>
+#include <control_msgs/FollowJointTrajectoryAction.h>
 
 // TODO: split 'grouping name' from 'PlanningManager'
 //       the planning_scene/robot_state/robot_model should be the same in different planning group
@@ -41,6 +43,7 @@ public:
     motoman_msgs::WriteSingleIO srv_io_open_;
     motoman_msgs::WriteSingleIO srv_io_close_;
     ros::ServiceClient client_gripper_;
+
 
     Gripper(ros::NodeHandle node_handle=ros::NodeHandle())
     :nh_(node_handle),
@@ -68,6 +71,9 @@ public:
     yeebot::RobotVisualTools visual_tools_;
     ros::NodeHandle nh_;
     int dim_;
+    std::unique_ptr<moveit_simple_controller_manager::FollowJointTrajectoryControllerHandle> execute_trajectory_handle_;
+    std::unique_ptr<actionlib::SimpleActionClient<control_msgs::FollowJointTrajectoryAction> > ac_;
+
 
     double time_plan_normal_;
     double time_plan_project_;
@@ -88,6 +94,7 @@ public:
         // if(! pm_->execute_action_client_->isServerConnected()){
         //     std::cout<<"server is not connected.\n";
         // }
+        initExecuteHandle();
         pm_->move_group_->setPlannerId("RRTConnectkConfigDefault");
         pm_->updateRobotState();
 
@@ -99,6 +106,72 @@ public:
         pc_constraint_->space_->as<ompl::base::YeeProjectedStateSpace>()->setMaxStep(pc_constraint_->space_->getMaximumExtent()*seg_factor_);
     }
     ~GraspMotion(){}
+
+    void initExecuteHandle(){
+        // std::string action_name="";//"fake_arm_left_controller";//"sda5f/sda5f_r1_controller";//for the left arm.r2 for right arm
+        // std::string action_ns="joint_trajectory_action";
+        // execute_trajectory_handle_.reset(new moveit_simple_controller_manager::FollowJointTrajectoryControllerHandle(action_name,action_ns));
+        // if(!execute_trajectory_handle_->isConnected()){
+        //     ROS_INFO("Failed to connect server.");
+        // }
+        // else{
+        //     ROS_INFO("connect to server.");
+        // }
+
+        //
+        ac_.reset(new actionlib::SimpleActionClient<control_msgs::FollowJointTrajectoryAction>("/sda5f/sda5f_r2_controller/joint_trajectory_action", true));
+
+        ac_->waitForServer(); //will wait for infinite time
+
+        ROS_INFO("Action server started, sending goal.");
+    }
+
+    bool execute(const moveit_msgs::RobotTrajectory& robot_trajectory,bool wait){
+        control_msgs::FollowJointTrajectoryGoal goal;
+        goal.trajectory=robot_trajectory.joint_trajectory;
+
+        ac_->sendGoal(goal);
+        if(!wait) return true;
+        bool finished_before_timeout = ac_->waitForResult(ros::Duration(30.0));
+
+        if (finished_before_timeout)
+        {
+            std::cout<<"action completed\n";
+            actionlib::SimpleClientGoalState state = ac_->getState();
+            ROS_INFO("Action finished: %s",state.toString().c_str());
+        }
+        else
+            ROS_INFO("Action did not finish before the time out.");
+        return true;
+
+        // if (!execute_trajectory_handle_->isConnected())
+        // {
+        //     //return MoveItErrorCode(moveit_msgs::MoveItErrorCodes::FAILURE);
+        //     std::cout<<"execute client: SERVER NOT CONNECTED\n";
+        //     return false;
+        // }
+
+        // execute_trajectory_handle_->sendTrajectory(robot_trajectory);
+        // if (!wait)
+        // {   //trajectory has been send
+        //     return true;
+        // }
+        // //wait until finish
+        // if (!execute_trajectory_handle_->waitForExecution()){
+        //     std::cout<<"execute action returned early\n";
+        // }
+        // if (execute_trajectory_handle_->getLastExecutionStatus() == moveit_controller_manager::ExecutionStatus::SUCCEEDED)
+        // {
+        //     return true;
+        // }
+        // else
+        // {
+        //     std::cout<<"execute client:"<<execute_trajectory_handle_->getLastExecutionStatus().asString().c_str()<<std::endl;
+        //     return false;
+        // }
+                                                    
+    }
+
 
     // 
     bool posePlanning(Eigen::Affine3d target_pose,moveit_msgs::RobotTrajectory& robot_trajectory,std::string reframe=BASE_LINK){
