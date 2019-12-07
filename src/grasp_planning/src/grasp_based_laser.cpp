@@ -2,13 +2,13 @@
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_listener.h>
 #include "grasp_motion.h"
-#include "obj_srv/obj_6d.h"
+
 #include <eigen_conversions/eigen_msg.h>
 #include <tf_conversions/tf_eigen.h>
 
 
-
 using namespace std;
+#define height 1.08
 
 int main(int argc, char **argv)
 {
@@ -25,7 +25,7 @@ int main(int argc, char **argv)
     Eigen::Affine3d ref_pose,error_pose;
     Eigen::Vector3d ref_trans;
     Eigen::Matrix3d ref_rot;
-    ref_rot=(Eigen::AngleAxisd(M_PI,Eigen::Vector3d::UnitZ()))* (Eigen::AngleAxisd(-M_PI/2, Eigen::Vector3d::UnitY()))*(Eigen::AngleAxisd(M_PI/4, Eigen::Vector3d::UnitZ()));
+    ref_rot=(Eigen::AngleAxisd(-M_PI*0.5,Eigen::Vector3d::UnitX())*Eigen::AngleAxisd(-M_PI*0.5,Eigen::Vector3d::UnitZ()));
     Eigen::Quaterniond q(ref_rot);
     ref_trans<<0.711815,  0.2496, 1.1416;
     ref_pose=Eigen::Affine3d(q);
@@ -42,20 +42,14 @@ int main(int argc, char **argv)
 
 
 
+
     GraspMotion gm(PLANNING_GROUP,planning_spec);
     Gripper gp;
-    //gp.open();
-    tf::TransformListener lr;
-    tf::TransformBroadcaster br;
+    gp.open();
+
 
     ros::ServiceClient client_counter = node_handle.serviceClient<obj_srv::obj_6d>("/recognize_counter");
-    obj_srv::obj_6d srv_pose;
-    srv_pose.request.start=true;
-    client_counter.call(srv_pose);
-    if(srv_pose.response.obj_array.poses.size()<1){
-        std::cout<<"Failed to recognize any counter\n";
-        return -1;
-    }
+
 
 
     // publish counter
@@ -67,17 +61,16 @@ int main(int argc, char **argv)
     counter_rot=Eigen::AngleAxisd(M_PI*0.5,Eigen::Vector3d::UnitX());
     counter_error.prerotate(counter_rot);
 
-
-
     // copy pose
     Eigen::Affine3d counter2laser=Eigen::Affine3d::Identity();
     Eigen::Affine3d laser2world=Eigen::Affine3d::Identity();
 
-    tf::poseMsgToEigen(srv_pose.response.obj_array.poses[0],counter2laser);
-    tf::StampedTransform transform_laser;
-    lr.waitForTransform("/world", "/laser", ros::Time(0), ros::Duration(10.0));
-    lr.lookupTransform("/world", "/laser", ros::Time(0), transform_laser);
-    tf::transformTFToEigen(transform_laser,laser2world);
+    if(!gm.callTransformation(client_counter,counter2laser)){
+        std::cout<<"Failed to recognize any pose\n";
+        ros::shutdown();
+        return -1;
+    }
+    gm.getTransformation(laser2world,"/laser");
     laser2world(2,3)=0;// z is 0
     counter_pose=laser2world*counter2laser*counter_error;
     //copy pose end
@@ -85,34 +78,65 @@ int main(int argc, char **argv)
     Eigen::Matrix3d c2grot;
     c2grot=Eigen::AngleAxisd(M_PI,Eigen::Vector3d::UnitX())*Eigen::AngleAxisd(-M_PI*0.5,Eigen::Vector3d::UnitZ());
     c2gpose.prerotate(c2grot);
-    c2gpose.pretranslate(Eigen::Vector3d(-0.45,1.1,0));
+    c2gpose.pretranslate(Eigen::Vector3d(-0.30,height,0));
 
     gm.visual_tools_.deleteAllMarkers();
     gm.visual_tools_.trigger();
     gm.visual_tools_.publishMeshBoth("counter",counter_path,counter_pose);
     gm.visual_tools_.trigger();
+    gm.visual_tools_.publishCube(1,  0.6,-0.15,0,  0.5,0.5,0.65);
+    gm.visual_tools_.trigger();
+    gm.visual_tools_.publishCube(2, counter_pose, Eigen::Vector3d(0.31, 3.0, 0.71));
+    gm.visual_tools_.trigger();
+    gm.visual_tools_.prompt("next");
+
 
     moveit_msgs::RobotTrajectory robot_trajectory;
 
     Eigen::Affine3d pose1=Eigen::Affine3d::Identity();
     Eigen::Affine3d pose2=Eigen::Affine3d::Identity();
     Eigen::Affine3d pose3=Eigen::Affine3d::Identity();
-    pose3=counter_pose*c2gpose;
+    Eigen::Affine3d pose4=Eigen::Affine3d::Identity();
+    Eigen::Affine3d pose5=Eigen::Affine3d::Identity();
+    Eigen::Affine3d p_place=Eigen::Affine3d::Identity();
 
-    Eigen::Matrix3d prot;
+    Eigen::VectorXd jnv3(gm.dim_),jnv4(gm.dim_),jnv5(gm.dim_),jnv_place(gm.dim_),jnv_home(gm.dim_);
+    jnv_home<<1.6577926874160767, -1.54693603515625, 0.2813563644886017, -0.2986098527908325, 0.09369432926177979, -1.2773751020431519, 0.4743640720844269;
+
+    pose3=counter_pose*c2gpose;
+    c2gpose(0,3)=-0.1;
+    pose4=counter_pose*c2gpose;
+    c2gpose(0,3)=-0.4;    
+    pose5=counter_pose*c2gpose;
+
+
+
+    Eigen::Matrix3d prot,prot1;
     Eigen::Vector3d ptrans;
     prot=Eigen::AngleAxisd(-M_PI*0.5,Eigen::Vector3d::UnitX())*Eigen::AngleAxisd(-M_PI*0.5,Eigen::Vector3d::UnitZ());
     ptrans<<1.145-0.18-0.45,-0.695+0.1,1.10;
     pose1.prerotate(prot);
     pose1.pretranslate(ptrans);
 
+    prot1=Eigen::AngleAxisd(M_PI/6.0,Eigen::Vector3d::UnitZ())*Eigen::AngleAxisd(-M_PI*0.5,Eigen::Vector3d::UnitX())*Eigen::AngleAxisd(-M_PI*0.5,Eigen::Vector3d::UnitZ());
+    p_place.prerotate(prot1);
+    p_place.pretranslate(Eigen::Vector3d(0.9,0,height-0.1));    
+
     pose2=pose1;
     pose2.translate(Eigen::Vector3d(0,-0.2, 0));
+
+   
     gm.visual_tools_.publishAxisLabeled(pose1, "pose1");
     gm.visual_tools_.trigger();
     gm.visual_tools_.publishAxisLabeled(pose2, "pose2");
     gm.visual_tools_.trigger();
     gm.visual_tools_.publishAxisLabeled(pose3, "pose3");
+    gm.visual_tools_.trigger();
+    gm.visual_tools_.publishAxisLabeled(pose4, "pose4");
+    gm.visual_tools_.trigger();
+    gm.visual_tools_.publishAxisLabeled(pose5, "pose5");
+    gm.visual_tools_.trigger();
+    gm.visual_tools_.publishAxisLabeled(p_place, "p_place");
     gm.visual_tools_.trigger();
 
     ros::Publisher display_publisher 
@@ -120,63 +144,118 @@ int main(int argc, char **argv)
     moveit_msgs::DisplayTrajectory display_trajectory;
     robot_state::robotStateToRobotStateMsg(*(gm.pm_->robot_state_), display_trajectory.trajectory_start);
     display_trajectory.model_id="motoman_sda5f";
-    ros::WallDuration sleep_t(4);
+    ros::WallDuration sleep_t(2);
 
-    gm.pm_->robot_state_->setFromIK(gm.pm_->robot_state_->getJointModelGroup(PLANNING_GROUP),pose3);
-    Eigen::VectorXd jnv2(gm.dim_);
-    gm.pm_->robot_state_->copyJointGroupPositions(PLANNING_GROUP,jnv2);
+    
     gm.pm_->updateRobotState();
-    if(!gm.jointPlanningYeebot(jnv2,robot_trajectory)){
-        std::cout<<"Joint planning failed."<<std::endl;
-        ros::shutdown();
-        return -1;
+    gm.updateRobotState();
+    if(!gm.solveIK(pose3,jnv3,2)){
+        std::cout<<"Not valid ik for pose3\n";
     }
-    display_trajectory.trajectory.push_back(robot_trajectory);
-    display_publisher.publish(display_trajectory);
-    std::cout<<"Joint planning: execute ..."<<std::endl;
+    if(!gm.solveIK(pose5,jnv5,jnv3,2)){
+        std::cout<<"Not valid ik for pose5\n";
+    }
+    if(!gm.solveIK(p_place,jnv_place,jnv3,2)){
+        std::cout<<"Not valid ik for p_place\n";
+    }
+    gm.updateRobotState();
 
-    // gm.pm_->execute(robot_trajectory,true);
-    // std::cout<<"Execution finished.";
-    // sleep_t.sleep();
-    // getchar();
+    std::cout<<"jnv3:"<<jnv3.transpose()<<std::endl;
+    std::cout<<"jnv5:"<<jnv3.transpose()<<std::endl;
+    std::cout<<"jnv_place:"<<jnv_place.transpose()<<std::endl;
 
-    // gm.pm_->updateRobotState();
-    // if(!gm.posePlanning(pose2,robot_trajectory)){
+    gm.backHome(jnv_home);
+    sleep_t.sleep();
+    gm.visual_tools_.prompt("next");
+    gm.pm_->updateRobotState();
+    gm.updateRobotState();
+
+
+
+    // if(!gm.posePlanningYeebot(pose1,robot_trajectory)){
     //     std::cout<<"Pose planning failed."<<std::endl;
     //     ros::shutdown();
     //     return -1;
     // }
+    // display_trajectory.trajectory.push_back(robot_trajectory);
+    // display_publisher.publish(display_trajectory);
     // std::cout<<"Pose planning: execute ..."<<std::endl;
-    moveit::planning_interface::MoveGroupInterface::Plan my_plan;
-    my_plan.trajectory_=robot_trajectory;
-    //gm.pm_->move_group_->execute(my_plan);
-    gm.execute(robot_trajectory,true);
-    std::cout<<"Execution finished.";
-    sleep_t.sleep();
+    // gm.execute(robot_trajectory,true);
+    // sleep_t.sleep();//not so fast otherwise move_group can not update the joint values at time
+    // gm.visual_tools_.trigger();
+    // gm.visual_tools_.prompt("next");
+    // gm.pm_->updateRobotState();
+    // gm.updateRobotState();
 
-    if(!gm.cartesianPlanning(pose1,robot_trajectory)){
-        std::cout<<"Cartesian planning failed."<<std::endl;
-        ros::shutdown();
-        return -1;
-    }
-    std::cout<<"Cartesian planning: execute ..."<<std::endl;
-    gm.pm_->execute(robot_trajectory,false);
-    sleep_t.sleep();
-    
-    gp.close();
-
-    // pose2.translate(Eigen::Vector3d(0,-0.1, 0));
     // if(!gm.cartesianPlanning(pose2,robot_trajectory)){
     //     std::cout<<"Cartesian planning failed."<<std::endl;
     //     ros::shutdown();
     //     return -1;
     // }
     // std::cout<<"Cartesian planning: execute ..."<<std::endl;
-    // gm.pm_->execute(robot_trajectory,false);
-    // sleep_t.sleep();
-    // sleep_t.sleep();
-    //start2
+    // gm.execute(robot_trajectory,true);
 
+    if(!gm.jointPlanningYeebot(jnv5,robot_trajectory)){
+        std::cout<<"Joint planning failed."<<std::endl;
+        ros::shutdown();
+        return -1;
+    }
+    std::cout<<"Joint planning: execute ..."<<std::endl;
+    gm.execute(robot_trajectory,true);
+    sleep_t.sleep();//not so fast otherwise move_group can not update the joint values at time
+    gm.visual_tools_.trigger();
+    gm.visual_tools_.prompt("next");
+    gm.pm_->updateRobotState();
+    gm.updateRobotState();
+
+    // if(!gm.cartesianPlanning(pose4,robot_trajectory)){
+    //     std::cout<<"Cartesian planning p4 failed."<<std::endl;
+    //     ros::shutdown();
+    //     return -1;
+    // }
+    // std::cout<<"Cartesian planning p4: execute ..."<<std::endl;
+    // gm.execute(robot_trajectory,true);
+    // gm.visual_tools_.trigger();
+    // gm.visual_tools_.prompt("next");
+    // gm.pm_->updateRobotState();
+    // gm.updateRobotState();
+
+    // if(!gm.cartesianPlanning(pose4,robot_trajectory)){
+    //     std::cout<<"Cartesian planning p5 failed."<<std::endl;
+    //     ros::shutdown();
+    //     return -1;
+    // }
+    // std::cout<<"Cartesian planning p5: execute ..."<<std::endl;
+    // gm.execute(robot_trajectory,true);
+    // gm.visual_tools_.trigger();
+    // gm.visual_tools_.prompt("next");
+    // gm.pm_->updateRobotState();
+    // gm.updateRobotState();
+
+
+    if(!gm.jointPlanningConstraint(jnv_place,robot_trajectory)){
+        std::cout<<"Constraint planning failed."<<std::endl;
+        ros::shutdown();
+        return -1;
+    }
+    display_trajectory.trajectory.clear();
+    display_trajectory.trajectory.push_back(robot_trajectory);
+    display_publisher.publish(display_trajectory);
+    std::cout<<"Constraint planning: execute ..."<<std::endl;
+    gm.visual_tools_.trigger();
+    gm.visual_tools_.prompt("next");
+    gm.execute(robot_trajectory,true);
+    sleep_t.sleep();
+    gm.pm_->updateRobotState();
+    gm.updateRobotState();
+
+   gm.visual_tools_.trigger();
+    gm.visual_tools_.prompt("next");//its feasible
+
+
+    
+    // gp.close();
+    gm.backHome(jnv_home);
     std::cout<<"All completed."<<std::endl;
 
 
@@ -188,7 +267,6 @@ int main(int argc, char **argv)
     // ros::WallDuration(1.0).sleep();
     // lr.waitForTransform("/base_link", "/camera_link", ros::Time(0), ros::Duration(10.0));
     // lr.lookupTransform("/base_link", "/camera_link", ros::Time(0), transform_camera);
-    // client_obj.call(srv_poses);
     //getchar();
     ros::shutdown();
     return 0;

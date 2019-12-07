@@ -3,6 +3,6 @@
     <node pkg="tf" type="static_transform_publisher" name="camera_link_broadcaster" args="0.267563  -0.114608  1.055919  0.621576  -0.620896  0.318589  -0.355855 /base_link /kinect2_rgb_optical_frame 100" />
 
      <node pkg="tf" type="static_transform_publisher" name="kinect_link_broadcaster" args=" 0.00662214  0.0339903 -0.0687947  0.919409 -0.392716 0.0021969 0.0213767 /arm_left_link_7_t /camera_rgb_optical_frame 100"/>
-     <node pkg="tf" type="static_transform_publisher" name="laser_link_broadcaster" args=" 0.43 -0.15 0.68 0 0 0 1 /world /laser 100"/>
+     <node pkg="tf" type="static_transform_publisher" name="laser_link_broadcaster" args=" 0.42 -0.15 0.68 0 0 0 1 /world /laser 100"/>
 
 </launch>

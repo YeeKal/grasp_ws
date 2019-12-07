@@ -31,6 +31,13 @@
 #include <actionlib/client/simple_action_client.h>
 #include <control_msgs/FollowJointTrajectoryAction.h>
 
+#include <ros/package.h>
+#include <tf/transform_broadcaster.h>
+#include <tf/transform_listener.h>
+#include <eigen_conversions/eigen_msg.h>
+#include <tf_conversions/tf_eigen.h>
+#include "obj_srv/obj_6d.h"
+
 // TODO: split 'grouping name' from 'PlanningManager'
 //       the planning_scene/robot_state/robot_model should be the same in different planning group
 
@@ -73,6 +80,11 @@ public:
     int dim_;
     std::unique_ptr<moveit_simple_controller_manager::FollowJointTrajectoryControllerHandle> execute_trajectory_handle_;
     std::unique_ptr<actionlib::SimpleActionClient<control_msgs::FollowJointTrajectoryAction> > ac_;
+    tf::TransformListener lr_;
+    tf::TransformBroadcaster br_;
+    obj_srv::obj_6d srv_pose_;
+
+    robot_state::RobotState robot_state_;
 
 
     double time_plan_normal_;
@@ -82,6 +94,7 @@ public:
 
     GraspMotion(std::string group_name,yeebot::PlanningSpec planning_spec,ros::NodeHandle node_handle=ros::NodeHandle())
     :pm_(new yeebot::PlanningManager(group_name,true)),
+    robot_state_(*(pm_->robot_state_)),
     pc_normal_(new yeebot::PlanningContext(planning_spec,pm_,yeebot::PlanType::NORMAL)),
     pc_constraint_(new yeebot::PlanningContext(planning_spec,pm_,yeebot::PlanType::AXIS_PROJECT)),
     nh_(node_handle),
@@ -108,23 +121,56 @@ public:
     ~GraspMotion(){}
 
     void initExecuteHandle(){
-        // std::string action_name="";//"fake_arm_left_controller";//"sda5f/sda5f_r1_controller";//for the left arm.r2 for right arm
-        // std::string action_ns="joint_trajectory_action";
-        // execute_trajectory_handle_.reset(new moveit_simple_controller_manager::FollowJointTrajectoryControllerHandle(action_name,action_ns));
-        // if(!execute_trajectory_handle_->isConnected()){
-        //     ROS_INFO("Failed to connect server.");
-        // }
-        // else{
-        //     ROS_INFO("connect to server.");
-        // }
+         std::string action_name="sda5f/sda5f_r2_controller";//"fake_arm_left_controller";//"sda5f/sda5f_r1_controller";//for the left arm.r2 for right arm
+        std::string action_ns="joint_trajectory_action";
+        execute_trajectory_handle_.reset(new moveit_simple_controller_manager::FollowJointTrajectoryControllerHandle(action_name,action_ns));
+        if(!execute_trajectory_handle_->isConnected()){
+            ROS_INFO("Failed to connect server.");
+        }
+        else{
+            ROS_INFO("connect to server.");
+        }
 
-        //
+        // execute action client
         ac_.reset(new actionlib::SimpleActionClient<control_msgs::FollowJointTrajectoryAction>("/sda5f/sda5f_r2_controller/joint_trajectory_action", true));
-
+        //ac_.reset(new actionlib::SimpleActionClient<control_msgs::FollowJointTrajectoryAction>("joint_trajectory_action", true));
         ROS_INFO("Wait for execute action to connect server.");
         ac_->waitForServer(); //will wait for infinite time
-
         ROS_INFO("Action server started, sending goal.");
+
+        // client 
+        srv_pose_.request.start=true;
+    }
+
+    void getTransformation(Eigen::Affine3d &trans,std::string target,std::string base=BASE_LINK){
+        tf::StampedTransform transform_frame;
+        lr_.waitForTransform(base, target, ros::Time(0), ros::Duration(10.0));
+        lr_.lookupTransform(base, target, ros::Time(0), transform_frame);
+        tf::transformTFToEigen(transform_frame,trans);
+    }
+
+    bool callTransformation(ros::ServiceClient & client,Eigen::Affine3d &trans){
+        client.call(srv_pose_);
+        if(srv_pose_.response.obj_array.poses.size()<1){
+            return false;
+        }
+        tf::poseMsgToEigen(srv_pose_.response.obj_array.poses[0],trans);
+        return true;
+    }
+
+    bool solveIK(const Eigen::Affine3d & eigen_pose,Eigen::VectorXd &joint_values,Eigen::VectorXd &ref_values,int max_attempts=1){
+        robot_state_.setJointGroupPositions(pm_->group_name_,ref_values);
+        solveIK(eigen_pose,joint_values,max_attempts);
+    }
+    bool solveIK(const Eigen::Affine3d & eigen_pose,Eigen::VectorXd &joint_values,int max_attempts=1){
+        const robot_state::JointModelGroup* jmg = robot_state_.getJointModelGroup(pm_->group_name_);
+        for(int i=0;i<max_attempts;i++){
+            if(robot_state_.setFromIK(jmg,eigen_pose)){
+                robot_state_.copyJointGroupPositions(jmg,joint_values);
+                return true;
+            }
+        }
+        return false;
     }
 
     bool execute(const moveit_msgs::RobotTrajectory& robot_trajectory,bool wait){
@@ -147,6 +193,33 @@ public:
         return false;                                          
     }
 
+    bool execute2(const moveit_msgs::RobotTrajectory& robot_trajectory,bool wait){
+        control_msgs::FollowJointTrajectoryGoal goal;
+        goal.trajectory=robot_trajectory.joint_trajectory;
+
+        ac_->sendGoal(goal);
+        if(!wait) return true;
+        bool finished_before_timeout = ac_->waitForResult(ros::Duration(30.0));
+
+        if (!finished_before_timeout)   {
+            ROS_INFO("Action did not finish before the time out.");
+            return false;
+        }
+        actionlib::SimpleClientGoalState state = ac_->getState();
+        ROS_INFO("Action finished: %s",state.toString().c_str());
+        if(state==actionlib::SimpleClientGoalState::SUCCEEDED){
+            return true;
+        }
+        return false;                                          
+    }
+
+    void updateRobotState(){
+        Eigen::VectorXd jnv2(dim_);
+        pm_->robot_state_->copyJointGroupPositions(pm_->group_name_,jnv2);
+        robot_state_.setJointGroupPositions(pm_->group_name_,jnv2);
+        robot_state_.update();
+    }
+
 
     // 
     bool posePlanning(Eigen::Affine3d target_pose,moveit_msgs::RobotTrajectory& robot_trajectory,std::string reframe=BASE_LINK){
@@ -158,15 +231,16 @@ public:
         if(!success){
             return false;
         }
-        std::cout<<"pose planning ...\n";
+        //std::cout<<"pose planning ...\n";
         robot_trajectory=my_plan.trajectory_;
         return true;
     }
 
     bool posePlanningYeebot(Eigen::Affine3d target_pose,moveit_msgs::RobotTrajectory& robot_trajectory,std::string reframe=BASE_LINK){
-        pm_->robot_state_->setFromIK(pm_->robot_state_->getJointModelGroup(pm_->group_name_),target_pose);
+        updateRobotState();
+        robot_state_.setFromIK(robot_state_.getJointModelGroup(pm_->group_name_),target_pose);
         Eigen::VectorXd jnv2(dim_);
-        pm_->robot_state_->copyJointGroupPositions(pm_->group_name_,jnv2);
+        robot_state_.copyJointGroupPositions(pm_->group_name_,jnv2);
 
         return jointPlanningYeebot(jnv2,robot_trajectory);
     }
@@ -179,7 +253,7 @@ public:
         waypoints.push_back(pose_msg);
 
         pm_->move_group_->setPoseReferenceFrame(reframe);
-        pm_->move_group_->setStartStateToCurrentState();
+        //pm_->move_group_->setStartStateToCurrentState();
         const double jump_threshold = 0.0; //0.0
         const double eef_step = 0.005;
         double fraction = pm_->move_group_->computeCartesianPath(waypoints, eef_step, jump_threshold, robot_trajectory);
@@ -220,9 +294,13 @@ public:
 
     // joint space planning by yeebot
     bool jointPlanningYeebot(Eigen::VectorXd& jnv,moveit_msgs::RobotTrajectory& robot_trajectory){
+        pc_normal_->ss_->clear();
         Eigen::VectorXd jnv_cur(dim_);
         pm_->robot_state_->copyJointGroupPositions(pm_->group_name_,jnv_cur);
+
         pc_normal_-> setStartAndGoalStates(jnv_cur,jnv);
+        
+        std::cout<<"jnv_cur:"<<jnv_cur.transpose()<<std::endl;
         if(!pc_normal_->plan(time_plan_normal_)){  
             return false;
         }
@@ -232,6 +310,7 @@ public:
 
     // joint space constraint planning by yeebot
     bool jointPlanningConstraint(Eigen::VectorXd& jnv,moveit_msgs::RobotTrajectory& robot_trajectory){
+        pc_constraint_->ss_->clear();
         Eigen::VectorXd jnv_cur(dim_);
         pm_->robot_state_->copyJointGroupPositions(pm_->group_name_,jnv_cur);
         pc_constraint_->setStartAndGoalStates(jnv_cur,jnv);
@@ -241,6 +320,38 @@ public:
         }
         pc_constraint_->getTrajectoryMsg(robot_trajectory);
         return true;
+    }
+    void backHome(Eigen::VectorXd& jnv){
+        pm_->updateRobotState();
+        moveit_msgs::RobotTrajectory robot_trajectory;
+        jointPlanningYeebot(jnv,robot_trajectory);
+        execute(robot_trajectory,true);
+    }
+
+    void publishTrajectoryLine(moveit_msgs::RobotTrajectory robot_trajectory,rviz_visual_tools::RvizVisualTools &visual_tools,const rviz_visual_tools::colors& color){
+        std::vector<geometry_msgs::Point> line;
+        for(std::size_t i=0;i<robot_trajectory.joint_trajectory.points.size();i++){
+            Eigen::VectorXd jnv(dim_);
+            for(int k=0;k<dim_;k++){
+                jnv[k]=robot_trajectory.joint_trajectory.points[i].positions[k];
+            }
+            
+            robot_state_.setJointGroupPositions(pm_->group_name_,jnv);
+            const Eigen::Affine3d end_pose=robot_state_.getGlobalLinkTransform("arm_right_link_gripper");
+            Eigen::Vector3d trans_pose;
+            trans_pose<<end_pose(0,3),end_pose(1,3),end_pose(2,3);
+            visual_tools.publishSphere(trans_pose,color,rviz_visual_tools::SMALL);
+            geometry_msgs::Point point1;
+            point1.x=end_pose.translation().x();
+            point1.y=end_pose.translation().y();
+            point1.z=end_pose.translation().z();
+
+            line.push_back(point1);
+        }
+        const double radius=0.01;
+        visual_tools.publishPath(line,color,radius);
+        visual_tools.trigger();
+        updateRobotState();
     }
 
 };

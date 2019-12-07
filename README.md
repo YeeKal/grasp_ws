@@ -1,5 +1,11 @@
 The box grasping workspace for master thesis.
 
+experiment:
+
+constraint:
+- moveit: p:0.03009/execute:5.8763      0.03543/5.9266123
+- yeebot: p:0.024/4.337   0.024/4.56
+
 Content:
 - [dependecies](#dependecies)
 - [hardware](#hardware)
@@ -48,6 +54,7 @@ roslaunch motoman_sda5f_moveit_config demo_real.launch
 
 
 
+
 ## hardware
 
 #### sda
@@ -62,6 +69,13 @@ initial_states(2019-12-05):
     [arm_left_joint_1_s, arm_left_joint_2_l, arm_left_joint_3_e, arm_left_joint_4_u, arm_left_joint_5_r,
   arm_left_joint_6_b, arm_left_joint_7_t]
 position: [-0.022554073482751846, 1.3352922201156616, 1.1472201347351074, 0.19595465064048767, 0.7072410583496094, -0.9488791227340698, 1.834251046180725]
+
+counter pose:
+    0.74654 4.07403e-17    -0.66534     0.76544
+   -0.66534 4.57124e-17    -0.74654   -0.963605
+          0           1 6.12323e-17           0
+          0           0           0           1
+
 
 #### laser
 
