@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import sys
 
-filename="pose.csv"
+filename="pose2.csv"
 if len(sys.argv)>1:
     filename=sys.argv[1]
 
@@ -26,14 +26,14 @@ else:
     filtered_data=[]
 
     #dynamic
-    # Qs=[1e-3,1e-3,1e-3]
-    # Rs=[0.01,0.01,0.01]
-    # Ps=[1e-2,1e-2,1e-2]
-    # Ks=[1e-3,1e-3,1e-3]
     Qs=[1e-3,1e-3,1e-3]
-    Rs=[0.05,0.05,0.05]
-    Ps=[1e-4,1e-4,1e-4]
+    Rs=[0.01,0.01,0.01]
+    Ps=[1e-2,1e-2,1e-2]
     Ks=[1e-3,1e-3,1e-3]
+    # Qs=[1e-3,1e-3,1e-3]
+    # Rs=[0.05,0.05,0.05]
+    # Ps=[1e-4,1e-4,1e-4]
+    # Ks=[1e-3,1e-3,1e-3]
     # static
     # Qs=[1e-6,1e-6,1e-6]
     # Rs=[0.01,0.01,0.01]
@@ -76,13 +76,13 @@ else:
     plt.subplot(3,1,1)
     plt.plot(data[:,0],data[:,1],color="blue",label="original",linewidth=1)# 85-125
     plt.plot(data[:,0],filtered_data[0],color="red",label="filtered",linewidth=1)# 85-125
-    plt.xlabel("t/s")
-    plt.ylabel("x/m")
+    plt.xlabel("t/(s)")
+    plt.ylabel("x/(m)")
     plt.legend(loc="upper right")
-    plt.text(13,0.7065,"Standard Deviation"+   \
-        "\nOriginal: "+str(format(np.std(data[:,1]),'.6f'))+  \
-        "\nFltered:  "+str(format(np.std(filtered_data[0]),'.6f')),   \
-        bbox = dict(facecolor = "r", alpha = 0.2))
+    # plt.text(13,0.7065,"Standard Deviation"+   \
+    #     "\nOriginal: "+str(format(np.std(data[:,1]),'.6f'))+  \
+    #     "\nFltered:  "+str(format(np.std(filtered_data[0]),'.6f')),   \
+    #     bbox = dict(facecolor = "r", alpha = 0.2))
     # plt.text(13,0.7081,"Standard Deviation")
     # plt.text(13,0.7071,"Original: "+str(format(np.std(data[:,1]),'.6f')))
     # plt.text(13,0.7061,"Fltered: "+str(format(np.std(filtered_data[0]),'.6f')))
@@ -93,25 +93,25 @@ else:
     plt.subplot(3,1,2)
     plt.plot(data[:,0],data[:,2],color="green",label="original",linewidth=1)# 85-125
     plt.plot(data[:,0],filtered_data[1],color="red",label="filtered",linewidth=1)# 85-125
-    plt.xlabel("t/s")
-    plt.ylabel("y/m")
+    plt.xlabel("t/(s)")
+    plt.ylabel("y/(m)")
     plt.legend(loc="upper right")
-    plt.text(13,-0.635,"Standard Deviation"+   \
-        "\nOriginal: "+str(format(np.std(data[:,2]),'.6f'))+  \
-        "\nFltered:  "+str(format(np.std(filtered_data[1]),'.6f')),   \
-        bbox = dict(facecolor = "r", alpha = 0.2))
+    # plt.text(13,-0.635,"Standard Deviation"+   \
+    #     "\nOriginal: "+str(format(np.std(data[:,2]),'.6f'))+  \
+    #     "\nFltered:  "+str(format(np.std(filtered_data[1]),'.6f')),   \
+    #     bbox = dict(facecolor = "r", alpha = 0.2))
 
 
     plt.subplot(3,1,3)
     plt.plot(data[:,0],data[:,3],color="orange",label="original",linewidth=1)# 85-125
     plt.plot(data[:,0],filtered_data[2],color="red",label="filtered",linewidth=1)# 85-125
-    plt.xlabel("t/s")
-    plt.ylabel(r"$\theta$/rad")
+    plt.xlabel("t/(s)")
+    plt.ylabel(r"$\theta$/(rad)")
     plt.legend(loc="upper right")
-    plt.text(13,-0.2125,"Standard Deviation"+   \
-        "\nOriginal: "+str(format(np.std(data[:,3]),'.6f'))+  \
-        "\nFltered:  "+str(format(np.std(filtered_data[2]),'.6f')),   \
-        bbox = dict(facecolor = "r", alpha = 0.2))
+    # plt.text(13,-0.2125,"Standard Deviation"+   \
+    #     "\nOriginal: "+str(format(np.std(data[:,3]),'.6f'))+  \
+    #     "\nFltered:  "+str(format(np.std(filtered_data[2]),'.6f')),   \
+    #     bbox = dict(facecolor = "r", alpha = 0.2))
 
     plt.subplots_adjust(wspace =0, hspace =0.3)
     plt.show()

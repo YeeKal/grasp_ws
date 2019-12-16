@@ -1,14 +1,11 @@
 The box grasping workspace for master thesis.
 
-experiment:
-
-constraint:
-- moveit: p:0.03009/execute:5.8763      0.03543/5.9266123
-- yeebot: p:0.024/4.337   0.024/4.56
 
 Content:
-- [dependecies](#dependecies)
+- [Experiment](#Experiment)
 - [hardware](#hardware)
+- [dependecies](#dependecies)
+
 
 #### help command
 
@@ -51,6 +48,26 @@ roslaunch motoman_sda5f_moveit_config demo_real.launch
     - hsv segmentation
     - 6D pose estimation: ICP+ Super4PCS
 3. motion planning
+
+
+## Experiment
+![time](reso/IMG_0945.JPG)
+
+constraint:
+- moveit: p:0.03009/execute:5.8763      0.03543/5.9266123
+- yeebot: p:0.024/4.337   0.024/4.56
+- conclusion: 
+    - planning time com: 0.035-0.024
+    - execution com: 4.337-5.926
+
+
+|         | back     |cartesian|constraint| counter | block |
+|---------| -------- | ------ | ------- | ------- | ----- |
+|planning | 0.0183  | 0.0246 | 0.0219 | 0.0356 | 0.5130 |
+|execution| 3.79     | 6.86   | 3.62   |     -   |   -   |
+|all time |14.8884   | planning |0.0648 |execution|   14.2750 |  
+
+241/h
 
 
 
