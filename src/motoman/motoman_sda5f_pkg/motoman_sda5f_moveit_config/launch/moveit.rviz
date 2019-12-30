@@ -10,14 +10,12 @@ Panels:
         - /MotionPlanning1/Planned Path1
         - /RobotModel1
         - /RobotModel1/Links1
-        - /RobotModel1/Links1/arm_left_link_tool01
-        - /RobotModel1/Links1/arm_right_link_tool01
         - /TF1
         - /TF1/Frames1
         - /TF1/Tree1
         - /MarkerArray1
       Splitter Ratio: 0.742560029
-    Tree Height: 352
+    Tree Height: 396
   - Class: rviz/Help
     Name: Help
   - Class: rviz/Views
@@ -163,6 +161,11 @@ Visualization Manager:
             Show Trail: false
             Value: true
           arm_right_link_gripper:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          arm_right_link_gripper_box:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -328,6 +331,11 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
+          arm_right_link_gripper_box:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
           arm_right_link_tool0:
             Alpha: 1
             Show Axes: false
@@ -370,7 +378,7 @@ Visualization Manager:
       Collision Enabled: false
       Enabled: true
       Links:
-        All Links Enabled: true
+        All Links Enabled: false
         Expand Joint Details: false
         Expand Link Details: false
         Expand Tree: false
@@ -459,6 +467,11 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        arm_right_link_gripper_box:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: false
         arm_right_link_tool0:
           Alpha: 1
           Show Axes: false
@@ -536,6 +549,8 @@ Visualization Manager:
           Value: false
         arm_right_link_gripper:
           Value: false
+        arm_right_link_gripper_box:
+          Value: true
         arm_right_link_tool0:
           Value: false
         base:
@@ -591,7 +606,8 @@ Visualization Manager:
                             arm_right_link_7_t:
                               arm_right_link_tool0:
                                 arm_right_link_gripper:
-                                  {}
+                                  arm_right_link_gripper_box:
+                                    {}
                 head_link:
                   {}
               torso_link_b2:
@@ -606,10 +622,16 @@ Visualization Manager:
       Marker Topic: rviz_visual_tools
       Name: MarkerArray
       Namespaces:
+        Path: true
+        Sphere: true
         Text: true
-        pose1: true
-        pose2: true
         pose3: true
+        pose4: true
+        pose4_up: true
+        pose5: true
+        pose5_up: true
+        start: true
+        target: true
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -636,25 +658,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 2.33406973
+      Distance: 2.24898243
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.748145044
-        Y: -0.348631263
-        Z: -9.4797997e-07
+        X: 0.448774636
+        Y: -0.518960595
+        Z: 3.58197303e-06
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.0500000007
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.679792225
+      Pitch: 0.609792709
       Target Frame: base_link
       Value: XYOrbit (rviz)
-      Yaw: 1.56312752
+      Yaw: 1.1881454
     Saved: ~
 Window Geometry:
   Displays:
@@ -668,11 +690,11 @@ Window Geometry:
     collapsed: false
   MotionPlanning - Trajectory Slider:
     collapsed: false
-  QMainWindow State: 000000ff00000000fd00000001000000000000031b000003befc020000000cfb000000100044006900730070006c0061007900730100000028000001a1000000d700fffffffb00000024005200760069007a00560069007300750061006c0054006f006f006c007300470075006901000001cf0000004f0000004300fffffffb0000000a0049006d006100670065020000007a00000214000002b800000224fb0000000800480065006c00700000000342000000bb0000007300fffffffb0000000a0056006900650077007300000003b0000000b0000000ad00fffffffb0000000c00430061006d00650072006100000002ff000001610000000000000000fb0000001e004d006f00740069006f006e00200050006c0061006e006e0069006e00670100000177000001d70000000000000000fb0000002e004d006f00740069006f006e0050006c0061006e006e0069006e00670020002d00200053006c00690064006500720000000000ffffffff0000000000000000fc00000224000001c20000018300fffffffa000000010100000002fb0000000a0049006d0061006700650000000000ffffffff0000000000000000fb0000001c004d006f00740069006f006e0050006c0061006e006e0069006e00670100000000000002b8000002ad00fffffffb0000000a0049006d00610067006502000002fd000000b7000002b800000228fb0000000a0049006d006100670065020000081e000000d0000002b800000201fb00000044004d006f00740069006f006e0050006c0061006e006e0069006e00670020002d0020005400720061006a006500630074006f0072007900200053006c00690064006500720000000000ffffffff0000004a00ffffff0000041e000003be00000001000000020000000100000002fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd00000001000000000000031b000003befc020000000cfb000000100044006900730070006c0061007900730100000028000001cd000000d700fffffffb00000024005200760069007a00560069007300750061006c0054006f006f006c007300470075006901000001fb000000570000004300fffffffb0000000a0049006d006100670065020000007a00000214000002b800000224fb0000000800480065006c00700000000342000000bb0000007300fffffffb0000000a0056006900650077007300000003b0000000b0000000ad00fffffffb0000000c00430061006d00650072006100000002ff000001610000000000000000fb0000001e004d006f00740069006f006e00200050006c0061006e006e0069006e00670100000177000001d70000000000000000fb0000002e004d006f00740069006f006e0050006c0061006e006e0069006e00670020002d00200053006c00690064006500720000000000ffffffff0000000000000000fc000002580000018e0000018300fffffffa000000010100000002fb0000000a0049006d0061006700650000000000ffffffff0000000000000000fb0000001c004d006f00740069006f006e0050006c0061006e006e0069006e00670100000000000002b8000002ad00fffffffb0000000a0049006d00610067006502000002fd000000b7000002b800000228fb0000000a0049006d006100670065020000081e000000d0000002b800000201fb00000044004d006f00740069006f006e0050006c0061006e006e0069006e00670020002d0020005400720061006a006500630074006f0072007900200053006c00690064006500720000000000ffffffff00000016000000160000041e000003be00000001000000020000000100000002fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   RvizVisualToolsGui:
     collapsed: false
   Views:
     collapsed: false
   Width: 1855
-  X: 65
-  Y: 44
+  X: 45
+  Y: 497

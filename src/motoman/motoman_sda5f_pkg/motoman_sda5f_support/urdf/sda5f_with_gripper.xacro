@@ -595,6 +595,33 @@
     </inertial>
   </link>
   
+  <link name="arm_right_link_gripper_box">
+    <visual>
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+	      <!-- <box size="0.08 0.30 0.20"/> -->
+	      <!-- <box size="0.01 0.01 0.01"/> -->
+	      <box size="0.08 0.30 0.25"/>        
+      </geometry>
+      <material name="gray"/>
+    </visual>
+    <collision>
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+	      <box size="0.08 0.32 0.25"/>        
+      </geometry>
+      <material name="yellow"/>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0.1" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <inertia
+	  ixx="0.01" ixy="0.0" ixz="0.0"
+	  iyy="0.01" iyz="0.0"
+	  izz="0.01"/>
+    </inertial>
+  </link>
+  
 
   <joint name="arm_right_joint_1_s" type="revolute">
     <parent link="torso_link_b1"/>
@@ -664,6 +691,13 @@
     <origin rpy="1.5708 0 0.7854" xyz="0 0 0.22"/>
     <parent link="arm_right_link_tool0"/>
     <child link="arm_right_link_gripper"/>
+    <dynamics damping="0.10" friction="0.10"/>
+  </joint>
+
+  <joint name="arm_right_joint_gripper_box" type="fixed">
+    <origin rpy="0 0 0" xyz="0 0.1 0.0"/>
+    <parent link="arm_right_link_gripper"/>
+    <child link="arm_right_link_gripper_box"/>
     <dynamics damping="0.10" friction="0.10"/>
   </joint>
 

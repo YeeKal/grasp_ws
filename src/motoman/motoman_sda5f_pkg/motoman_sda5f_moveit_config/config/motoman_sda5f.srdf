@@ -202,4 +202,6 @@
     <disable_collisions link1="base_link" link2="head_link" reason="Never" />
     <disable_collisions link1="base_link" link2="torso_link_b1" reason="Adjacent" />
     <disable_collisions link1="head_link" link2="torso_link_b1" reason="Adjacent" />
+    <disable_collisions link1="arm_right_link_gripper" link2="arm_right_link_gripper_box" reason="Adjacent" />
+
 </robot>
