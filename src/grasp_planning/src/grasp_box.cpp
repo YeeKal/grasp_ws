@@ -10,6 +10,9 @@
 
 #define height 1.08
 
+/*
+grab the box one step by one step
+*/
 
 int main(int argc, char **argv)
 {

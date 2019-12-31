@@ -60,6 +60,9 @@ target_link_libraries(grasp_attach ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 add_executable(grasp_full src/grasp_full.cpp)
 target_link_libraries(grasp_full ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
+add_executable(grasp_place src/grasp_place.cpp)
+target_link_libraries(grasp_place ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+
 
 add_executable(cbirrt_demo src/cbirrt_demo.cpp)
 target_link_libraries(cbirrt_demo ${catkin_LIBRARIES} ${Boost_LIBRARIES})

@@ -9,14 +9,14 @@
 //using namespace std;
 
 #define height 1.08
-
 /*
-grab the box without stop
+place the box
 */
+
 int main(int argc, char **argv)
 {
     int pick_id = (argc > 1) ? atoi(argv[1]) : 1;
-    ros::init(argc, argv, "grasp_full");
+    ros::init(argc, argv, "grasp_place");
     ros::NodeHandle node_handle;
     // ros::AsyncSpinner spinner(4);
     // spinner.start();
@@ -40,7 +40,7 @@ int main(int argc, char **argv)
     std::cout<<"reference pose matrix:\n"<<ref_pose.matrix()<<std::endl;
     planning_spec.ref_pose_=ref_pose;
     planning_spec.invalid_vector_=invalid_vector;
-    planning_spec.project_error_=1e-3;
+    planning_spec.project_error_=1e-2;
     planning_spec.ik_error_=1e-6;
 
     ros::Time time_ik_start,time_ik_end;
@@ -112,7 +112,10 @@ int main(int argc, char **argv)
     moveit_msgs::RobotTrajectory robot_trajectory;
 
     Eigen::Affine3d pose1=Eigen::Affine3d::Identity();
+    Eigen::Affine3d pose1_down=Eigen::Affine3d::Identity();
     Eigen::Affine3d pose2=Eigen::Affine3d::Identity();
+    Eigen::Affine3d pose2_down=Eigen::Affine3d::Identity();
+
     Eigen::Affine3d pose3=Eigen::Affine3d::Identity();// start into 
     Eigen::Affine3d pose4=Eigen::Affine3d::Identity();// grasp pose
     Eigen::Affine3d pose4_up=Eigen::Affine3d::Identity();
@@ -122,45 +125,52 @@ int main(int argc, char **argv)
     Eigen::Affine3d box_pose=Eigen::Affine3d::Identity();
 
 
-    Eigen::VectorXd jnv3(gm.dim_),jnv4(gm.dim_),jnv5(gm.dim_),jnv_place(gm.dim_),jnv_home(gm.dim_);
+    Eigen::VectorXd jnv3(gm.dim_),jnv4(gm.dim_),jnv5(gm.dim_),jnv_place(gm.dim_),jnv_home(gm.dim_),jnv2(gm.dim_),jnv1(gm.dim_);
     jnv_home<<1.6577926874160767, -1.54693603515625, 0.2813563644886017, -0.2986098527908325, 0.09369432926177979, -1.2773751020431519, 0.4743640720844269;
     gm.robot_state_.setJointGroupPositions(gm.pm_->group_name_,jnv_home);
     const Eigen::Affine3d p_init=gm.robot_state_.getGlobalLinkTransform("arm_right_link_gripper");
     
     pose3=counter_pose*c2gpose;
-    c2gpose(0,3)=-0.1+0.07;
+    c2gpose(0,3)=-0.1+0.05;
     pose4=counter_pose*c2gpose;
-    c2gpose(0,3)=-0.4;    
+    c2gpose(0,3)=-0.38;    
     pose5=counter_pose*c2gpose;
     c2gpose(0,3)=0.05;
     box_pose=counter_pose*c2gpose;
 
-    c2gpose(0,3)=-0.1+0.07;
-    c2gpose(1,3)=c2gpose(1,3)+0.03;
+    c2gpose(0,3)=-0.1+0.05;
+    c2gpose(1,3)=c2gpose(1,3)+0.05;
     pose4_up=counter_pose*c2gpose;
-    c2gpose(0,3)=-0.4;    
+    c2gpose(0,3)=-0.38;    
     pose5_up=counter_pose*c2gpose;
 
+    c2gpose(1,3)=c2gpose(1,3)+0.35+0.01;
+    c2gpose(0,3)=-0.38;  
+    pose2= counter_pose*c2gpose;
+    c2gpose(0,3)=-0.1+0.05;  
+    pose1=counter_pose*c2gpose;
+    c2gpose(1,3)=c2gpose(1,3)-0.06;
+    pose1_down=counter_pose*c2gpose;
+    c2gpose(0,3)=-0.38;  
+    pose2_down= counter_pose*c2gpose;
 
 
-
-    Eigen::Matrix3d prot,prot1;
-    Eigen::Vector3d ptrans;
-    prot=Eigen::AngleAxisd(-M_PI*0.5,Eigen::Vector3d::UnitX())*Eigen::AngleAxisd(-M_PI*0.5,Eigen::Vector3d::UnitZ());
-    ptrans<<1.145-0.18-0.45,-0.695+0.1,1.10;
-    pose1.prerotate(prot);
-    pose1.pretranslate(ptrans);
+    Eigen::Matrix3d prot1;
 
     prot1=Eigen::AngleAxisd(M_PI/6.0,Eigen::Vector3d::UnitZ())*Eigen::AngleAxisd(-M_PI*0.5,Eigen::Vector3d::UnitX())*Eigen::AngleAxisd(-M_PI*0.5,Eigen::Vector3d::UnitZ());
     p_place.prerotate(prot1);
     p_place.pretranslate(Eigen::Vector3d(0.9,0,height-0.1));    
 
-    pose2=pose1;
-    pose2.translate(Eigen::Vector3d(0,-0.2, 0));
 
    
-    // gm.visual_tools_.publishAxisLabeled(pose1, "pose1");
-    // gm.visual_tools_.trigger();
+    gm.visual_tools_.publishAxisLabeled(pose1, "pose1");
+    gm.visual_tools_.trigger();
+    gm.visual_tools_.publishAxisLabeled(pose2, "pose2");
+    gm.visual_tools_.trigger();
+    gm.visual_tools_.publishAxisLabeled(pose1_down, "pose1_down");
+    gm.visual_tools_.trigger();
+    gm.visual_tools_.publishAxisLabeled(pose2_down, "pose2_down");
+    gm.visual_tools_.trigger();
     gm.visual_tools_.publishAxisLabeled(p_init, "start");
     gm.visual_tools_.trigger();
     gm.visual_tools_.publishAxisLabeled(pose3, "pose3");
@@ -181,7 +191,7 @@ int main(int argc, char **argv)
     moveit_msgs::DisplayTrajectory display_trajectory;
     robot_state::robotStateToRobotStateMsg(*(gm.pm_->robot_state_), display_trajectory.trajectory_start);
     display_trajectory.model_id="motoman_sda5f";
-    ros::WallDuration sleep_t(0.5);
+    ros::WallDuration sleep_t(0.8);
 
     
     gm.pm_->updateRobotState();
@@ -195,11 +205,19 @@ int main(int argc, char **argv)
     if(!gm.solveIK(p_place,jnv_place,jnv3,2)){
         std::cout<<"Not valid ik for p_place\n";
     }
+    if(!gm.solveIK(pose2,jnv2,jnv3,2)){
+        std::cout<<"Not valid ik for p_place\n";
+    }
+    if(!gm.solveIK(pose1,jnv1,jnv2,2)){
+        std::cout<<"Not valid ik for p_place\n";
+    }
     gm.updateRobotState();
 
     std::cout<<"jnv3:"<<jnv3.transpose()<<std::endl;
     std::cout<<"jnv5:"<<jnv3.transpose()<<std::endl;
     std::cout<<"jnv_place:"<<jnv_place.transpose()<<std::endl;
+    std::cout<<"jnv2:"<<jnv2.transpose()<<std::endl;
+    std::cout<<"jnv1:"<<jnv1.transpose()<<std::endl;
 
     gm.backHome(jnv_home);
     gm.visual_tools_.prompt("next");
@@ -213,163 +231,134 @@ int main(int argc, char **argv)
     gm.pm_->updateRobotState();
     gm.updateRobotState();
 
-    //time_ik_start=ros::Time::now();
+    //jnv3
     if(!gm.jointPlanningYeebot(jnv3,robot_trajectory)){
         std::cout<<"Joint planning failed."<<std::endl;
         ros::shutdown();
         return -1;
     }
-    // time_ik_end=ros::Time::now();
-    // std::cout<<"planning time:"<<time_ik_end-time_ik_start<<std::endl;
-    // std::cout<<"Joint planning jnv3: execute ..."<<std::endl;
-    // gm.publishTrajectoryLine(robot_trajectory,gm.visual_tools_,rviz_visual_tools::GREY);
-    // time_ik_start=ros::Time::now();
     gm.execute2(robot_trajectory,true);
-    // time_ik_end=ros::Time::now();
-    // std::cout<<"execution time:"<<time_ik_end-time_ik_start<<std::endl;
     sleep_t.sleep();//not so fast otherwise move_group can not update the joint values at time
-    // gm.visual_tools_.trigger();
-    // gm.visual_tools_.prompt("next");
     gm.pm_->updateRobotState();
     gm.updateRobotState();
 
 
 
     // pose4
-    //time_ik_start=ros::Time::now();
     if(!gm.cartesianPlanning(pose4,robot_trajectory)){
         std::cout<<"Cartesian planning p4 failed."<<std::endl;
         ros::shutdown();
         return -1;
     }
-    // time_ik_end=ros::Time::now();
-    // std::cout<<"planning time:"<<time_ik_end-time_ik_start<<std::endl;
-    // std::cout<<"Cartesian planning p4: execute ..."<<std::endl; 
-    // gm.publishTrajectoryLine(robot_trajectory,gm.visual_tools_,rviz_visual_tools::GREY);
-    // time_ik_start=ros::Time::now();
     gm.execute2(robot_trajectory,true);
-    // time_ik_end=ros::Time::now();
-    // std::cout<<"execution time:"<<time_ik_end-time_ik_start<<std::endl;
-    // gm.visual_tools_.trigger();
-    // gm.visual_tools_.prompt("next");
     gp.close();
     sleep_t.sleep();
     gm.pm_->updateRobotState();
     gm.updateRobotState();
 
      //pose4_up
-    //time_ik_start=ros::Time::now();
     if(!gm.cartesianPlanning(pose4_up,robot_trajectory)){
         std::cout<<"Cartesian planning p4 failed."<<std::endl;
         ros::shutdown();
         return -1;
     }
-    // time_ik_end=ros::Time::now();
-    // std::cout<<"planning time:"<<time_ik_end-time_ik_start<<std::endl;
-    // std::cout<<"Cartesian planning p4_up: execute ..."<<std::endl; 
-    // gm.publishTrajectoryLine(robot_trajectory,gm.visual_tools_,rviz_visual_tools::GREY);
-    // time_ik_start=ros::Time::now();
     gm.execute2(robot_trajectory,true);
-    // time_ik_end=ros::Time::now();
-    // std::cout<<"execution time:"<<time_ik_end-time_ik_start<<std::endl;
-    // gm.visual_tools_.trigger();
-    // gm.visual_tools_.prompt("next");
     sleep_t.sleep();
     gm.pm_->updateRobotState();
     gm.updateRobotState();
 
 
     //pose5_up
-    //time_ik_start=ros::Time::now();
     if(!gm.cartesianPlanning(pose5_up,robot_trajectory)){
         std::cout<<"Cartesian planning p5_up failed."<<std::endl;
         ros::shutdown();
         return -1;
     }
-    // time_ik_end=ros::Time::now();
-    // std::cout<<"planning time:"<<time_ik_end-time_ik_start<<std::endl;
-    // std::cout<<"Cartesian planning p5_up: execute ..."<<std::endl;    
-    // gm.publishTrajectoryLine(robot_trajectory,gm.visual_tools_,rviz_visual_tools::GREY);
-    // time_ik_start=ros::Time::now();
     gm.execute2(robot_trajectory,true);
-    // time_ik_end=ros::Time::now();
-    // std::cout<<"execution time:"<<time_ik_end-time_ik_start<<std::endl;
-    // //gm.visual_tools_.publishCube(2, counter_pose, Eigen::Vector3d(0.31, 3.0, 0.71));
-    // gm.visual_tools_.trigger();
-    // gm.visual_tools_.prompt("next");
     sleep_t.sleep();
     gm.pm_->updateRobotState();
     gm.updateRobotState();
 
-    // jnv place
-    //time_ik_start=ros::Time::now();
-    if(!gm.jointPlanningConstraint(jnv_place,robot_trajectory)){
+    //pose2
+    // jnv2
+    // if(!gm.jointPlanningConstraint(jnv2,robot_trajectory)){
+    //     std::cout<<"Constraint planning failed."<<std::endl;
+    //     ros::shutdown();
+    //     return -1;
+    // }
+    // gm.execute2(robot_trajectory,true);
+    // sleep_t.sleep();
+    // gm.pm_->updateRobotState();
+    // gm.updateRobotState();
+
+    // if(!gm.cartesianPlanning(pose2,robot_trajectory)){
+    //     std::cout<<"Cartesian planning p2 failed."<<std::endl;
+    //     ros::shutdown();
+    //     return -1;
+    // }
+    // gm.execute2(robot_trajectory,true);
+    // sleep_t.sleep();
+    // gm.pm_->updateRobotState();
+    // gm.updateRobotState();
+
+    //pose1
+    // jnv1
+    if(!gm.jointPlanningConstraint(jnv1,robot_trajectory)){
         std::cout<<"Constraint planning failed."<<std::endl;
         ros::shutdown();
         return -1;
     }
-    // if(!gm.cartesianPlanning(p_place,robot_trajectory)){
-    //     std::cout<<"Cartesian planning p5 failed."<<std::endl;
+    gm.execute2(robot_trajectory,true);
+    sleep_t.sleep();
+    gm.pm_->updateRobotState();
+    gm.updateRobotState();
+
+    // if(!gm.cartesianPlanning(pose1,robot_trajectory)){
+    //     std::cout<<"Cartesian planning p1 failed."<<std::endl;
     //     ros::shutdown();
     //     return -1;
     // }
-    // time_ik_end=ros::Time::now();
-    // std::cout<<"constraint planning time:"<<time_ik_end-time_ik_start<<std::endl;
-    // gm.publishTrajectoryLine(robot_trajectory,gm.visual_tools_,rviz_visual_tools::RED);
-    // display_trajectory.trajectory.clear();
-    // display_trajectory.trajectory.push_back(robot_trajectory);
-    // display_publisher.publish(display_trajectory);
-    // std::cout<<"Constraint planning: execute ..."<<std::endl;
-    // gm.visual_tools_.trigger();
-    // gm.visual_tools_.prompt("next");
-    // time_ik_start=ros::Time::now();
+    // gm.execute2(robot_trajectory,true);
+    // sleep_t.sleep();
+    // gm.pm_->updateRobotState();
+    // gm.updateRobotState();
+
+     //pose1_down
+    if(!gm.cartesianPlanning(pose1_down,robot_trajectory)){
+        std::cout<<"Cartesian planning p1_down failed."<<std::endl;
+        ros::shutdown();
+        return -1;
+    }
     gm.execute2(robot_trajectory,true);
-    // time_ik_end=ros::Time::now();
-    // std::cout<<"execution time:"<<time_ik_end-time_ik_start<<std::endl;
     gp.open();
     sleep_t.sleep();
     gm.pm_->updateRobotState();
     gm.updateRobotState();
 
-    // gm.visual_tools_.trigger();
-    // gm.visual_tools_.prompt("next");//its feasible
+    //pose2_down
+    if(!gm.cartesianPlanning(pose2_down,robot_trajectory)){
+        std::cout<<"Cartesian planning p2_down failed."<<std::endl;
+        ros::shutdown();
+        return -1;
+    }
+    gm.execute2(robot_trajectory,true);
+    sleep_t.sleep();
+    gm.pm_->updateRobotState();
+    gm.updateRobotState();
+
+    
+
 
 
     
     // back home
-    // gm.pc_normal_-> setStartAndGoalStates(jnv_place,jnv_home);
-    // if(!gm.pc_normal_->plan(5.0)){  
-    //     std::cout<<"Back home failed."<<std::endl;
-    //     ros::shutdown();
-    //     return -1;
-    // }
-    // gm.pc_normal_->getTrajectoryMsg(robot_trajectory);
-    // gm.execute2(robot_trajectory,true);
-    // std::cout<<"All completed\n";
-    //gm.visual_tools_.detachCube(5);
-
-    //time_ik_start=ros::Time::now();
     if(!gm.jointPlanningYeebot(jnv_home,robot_trajectory)){
         std::cout<<"Joint planning failed."<<std::endl;
         ros::shutdown();
         return -1;
     }
-    // time_ik_end=ros::Time::now();
-    // std::cout<<"planning time:"<<time_ik_end-time_ik_start<<std::endl;
-    // gm.publishTrajectoryLine(robot_trajectory,gm.visual_tools_,rviz_visual_tools::GREY);
-    // std::cout<<"Joint planning: execute ..."<<std::endl;
-    // time_ik_start=ros::Time::now();
     gm.execute2(robot_trajectory,true);
-    // time_ik_end=ros::Time::now();
-    // std::cout<<"execution time:"<<time_ik_end-time_ik_start<<std::endl;
     std::cout<<"completed\n";
- 
-
-
-    // ros::WallDuration(1.0).sleep();
-    // lr.waitForTransform("/base_link", "/camera_link", ros::Time(0), ros::Duration(10.0));
-    // lr.lookupTransform("/base_link", "/camera_link", ros::Time(0), transform_camera);
-    //getchar();
     ros::shutdown();
     return 0;
 }
